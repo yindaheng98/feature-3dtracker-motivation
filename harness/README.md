@@ -55,7 +55,7 @@ commands from the repository root:
 .venv/bin/python -m pip check
 ```
 
-Do not install the four submodules' original requirement files directly: their
+Do not install the five submodules' original requirement files directly: their
 documented Torch, CUDA, NumPy, and legacy API pins conflict. See
 `dependencies/native-prerequisites.md` before attempting TrackerSplat's CUDA
 extensions or external system tools.

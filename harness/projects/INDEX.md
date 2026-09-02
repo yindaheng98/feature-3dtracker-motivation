@@ -9,25 +9,25 @@ cross-project comparison or broad code exploration to `code_explorer`.
 | Open-d4rt | 4D reconstruction/tracking and WorldTrack evaluation | `LIMIT_SEQS=1`, one subset, small query chunks | Defaults can require 8 GPUs and OOM; weights/data may be absent | [detail](Open-d4rt.md) |
 | MV-TAP | Multi-view 3D point tracking | Static checks, then one explicit dataset/eval target | Full training/eval, W&B, and view-copy operations are expensive | [detail](MV-TAP.md) |
 | TrackerSplat | Dynamic Gaussian reconstruction using point tracks | Target one sequence, few frames/iterations, unique output | Batch scripts overwrite/delete/move data and fan out over many runs | [detail](TrackerSplat.md) |
+| LAPA | Transformer-based multi-camera 3D point tracking | Entrypoint help, then its built-in synthetic model forward | Real inference needs checkpoint, MC metadata, HDF5 feature cache, and track NPZ | [detail](LAPA.md) |
 
 ## Shared environment caveat
 
-The root `.venv` (Python 3.12.8, Torch 2.11.0+cu128) is the repository's only
-Python environment. The four projects' documented Python, PyTorch, and NumPy
+The root `.venv` (Python 3.12.8, Torch 2.6.0+cu124) is the repository's only
+Python environment. The five projects' documented Python, PyTorch, and NumPy
 pins conflict, so do not install their raw requirement files. Install through
 the manifests under `harness/dependencies/`, preserve the protected stack, and
 run an import/version preflight after every dependency change. Do not create a
 per-submodule environment.
 
-The shared Python dependency set is installed and healthy. TrackerSplat's
-`gaussian-splatting`, `InstantSplat`, `reduced-3dgs`, and consequently
-`ExtrinsicInterpolator` remain unavailable until its nested submodules and a
-CUDA 12.8-compatible `nvcc`/`CUDA_HOME` are provided. SpaTrackerV2 also has one
-source compatibility issue: it imports the removed, unused
-`torchvision.io.write_video` symbol; its remaining import graph succeeds when
-that unused legacy import is bypassed. Details are in
+The shared Python dependency set is installed. LAPA, MV-TAP, Open-d4rt, and
+SpaTrackerV2 pass model-construction or synthetic-forward smokes on the selected
+stack. TrackerSplat's historical external packages and nested submodules are
+present, but its own three CUDA extensions cannot be built until the host
+provides `gcc`, `g++`, and CUDA 12.4 `nvcc`/`CUDA_HOME`. InstantSplat's standard
+dense path also needs the system `libGL.so.1`. Details are in
 `../dependencies/native-prerequisites.md` and experiment
-`EXP-20260902T035007Z-af34`.
+`EXP-20260902T224607Z-fe07`.
 
 The host exposes four RTX A5000 GPUs, while some scripts assume eight. A command
 requiring more than one GPU, model/data downloads, training, full evaluation, or

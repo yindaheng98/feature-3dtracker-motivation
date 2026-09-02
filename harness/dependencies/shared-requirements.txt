@@ -52,8 +52,8 @@ rich
 ray[default]
 transformers
 evo
-# 0.0.35 is the newest release whose wheel metadata accepts Torch 2.11.
-xformers==0.0.35
+# 0.0.29.post3 has a CPython 3.12 wheel and pins the selected Torch 2.6.0.
+xformers==0.0.29.post3
 
 # TrackerSplat and cross-project model utilities
 taichi
@@ -64,6 +64,9 @@ huggingface-hub
 viser
 moderngl
 plyfile
+roma
+open3d
+ninja
 
 # Open-d4rt's MOVi-F/TFDS data path (not needed by other data backends)
 tensorflow

@@ -3,7 +3,7 @@
 ## Mission
 
 Work with the user from this repository root to inspect code, test ideas, run
-experiments, analyze evidence, modify the four submodules when requested, and
+experiments, analyze evidence, modify the five submodules when requested, and
 retain concise project memory across sessions.
 
 The harness is automatic. At the beginning of every turn, follow the startup
@@ -12,9 +12,10 @@ the user did not explicitly ask for memory to be saved.
 
 ## Repository map and boundaries
 
-- `SpaTrackerV2/`, `Open-d4rt/`, `MV-TAP/`, and `TrackerSplat/` are independent
-  Git submodules. Treat each as a separate repository when checking status,
-  commits, diffs, and rollback scope.
+- `SpaTrackerV2/`, `Open-d4rt/`, `MV-TAP/`, `TrackerSplat/`, and
+  `Look-Around-and-Pay-Attention-LAPA-/` are independent Git submodules. Treat
+  each as a separate repository when checking status, commits, diffs, and
+  rollback scope.
 - `.venv` is the sole Python environment for this repository. Use explicit
   commands such as `.venv/bin/python` and `.venv/bin/python -m pip`; do not
   assume activation and never create Conda, venv, uv, Poetry, or per-submodule

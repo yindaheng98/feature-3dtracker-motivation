@@ -6,6 +6,7 @@
 | `Open-d4rt/` | 4D reconstruction/tracking and WorldTrack evaluation | Default scripts may be multi-GPU; begin with bounded evaluation or dry-run checks. | [Open-d4rt](../../projects/Open-d4rt.md) |
 | `MV-TAP/` | Multi-view 3D point tracking | Dataset/view generation and full evaluation can be large; use explicit paths and unique output. | [MV-TAP](../../projects/MV-TAP.md) |
 | `TrackerSplat/` | Tracking-driven dynamic Gaussian reconstruction | Batch scripts contain destructive/overwriting steps; use targeted Python entrypoints for smoke tests. | [TrackerSplat](../../projects/TrackerSplat.md) |
+| `Look-Around-and-Pay-Attention-LAPA-/` | Multi-camera transformer point tracking | Real runs require checkpoint, MC metadata, HDF5 features, and track NPZ; keep synthetic and real-data validation separate. | [LAPA](../../projects/LAPA.md) |
 
 Per-experiment cards record exact commit, branch, dirty paths, changed symbols,
 and diff stats. Never place full diffs in this index.
@@ -14,5 +15,4 @@ and diff stats. Never place full diffs in this index.
 
 | Date | Scope | Reusable fact |
 | --- | --- | --- |
-| 2026-09-02 | Root `.venv` CUDA extensions | The host GPUs are RTX A5000 (SM 8.6), `/usr/local/cuda` is nvcc 12.4, and protected PyTorch 2.11 is built for CUDA 12.8 with an architecture list through SM 12.0. Unconstrained extension builds can fail when nvcc 12.4 receives `compute_100`; for this host, constrain builds to `TORCH_CUDA_ARCH_LIST=8.6` or provide a CUDA 12.8 compiler. |
-
+| 2026-09-02 | Root `.venv` CUDA extensions | The host GPUs are RTX A5000 (SM 8.6) and protected PyTorch is 2.6.0+cu124. The current runtime has no `gcc`, `g++`, `nvcc`, or `CUDA_HOME`; TrackerSplat cannot build its three custom extensions until a CUDA 12.4 build toolchain is provided. The similarly named pip `nvidia-cuda-nvcc-cu12` wheel contains `ptxas`, not the `nvcc` driver. |

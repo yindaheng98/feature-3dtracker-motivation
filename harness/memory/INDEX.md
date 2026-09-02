@@ -10,7 +10,7 @@ default. Follow links only when they are relevant to the current request.
 ## Current objective
 
 Build and use a lightweight experiment harness for iterative 3D-tracker research
-across the four submodules while keeping evidence reproducible and context small.
+across the five submodules while keeping evidence reproducible and context small.
 
 ## Active threads
 
@@ -23,6 +23,7 @@ across the four submodules while keeping evidence reproducible and context small
 <!-- experiment-rows:start -->
 | ID | Date | Status | Scope | Headline | Detail |
 | --- | --- | --- | --- | --- | --- |
+| EXP-20260902T224607Z-fe07 | 2026-09-02 | inconclusive | root .venv dependency repair and Look-Around-and-Pay-Attention-LAPA- import validation; no submodule source edits | LAPA, MV-TAP, Open-d4rt, and SpaTrackerV2 passed executable smokes on protected Torch 2.6.0+cu124; TrackerSplat remains blocked by missing … | [EXP-20260902T224607Z-fe07](experiments/2026/09/EXP-20260902T224607Z-fe07.md) |
 | EXP-20260902T035007Z-af34 | 2026-09-02 | successful | root .venv dependency resolution and import validation for four submodules; no source changes inside submodules | Shared Python dependencies installed in root .venv; pip check clean, protected Torch/CUDA stack unchanged, imports and XFormers CUDA kernel… | [EXP-20260902T035007Z-af34](experiments/2026/09/EXP-20260902T035007Z-af34.md) |
 <!-- experiment-rows:end -->
 
@@ -42,10 +43,10 @@ Keep at most 12 closed experiments here. The full directory is in
 
 | Topic | One-line summary | Route |
 | --- | --- | --- |
-| Projects | Four submodules have different dependencies, entrypoints, and risk levels. | [project index](../projects/INDEX.md) |
+| Projects | Five submodules have different dependencies, entrypoints, and risk levels. | [project index](../projects/INDEX.md) |
 | Manual TrackerSplat dependencies | The root README records the five pinned Git dependencies, protected-stack constraint, SM 8.6 build target, and post-install `pip check`. | [root README](../../README.md) |
 | TrackerSplat historical dependencies | External repos are pinned to their last commits before TrackerSplat HEAD on 2025-11-23; nested CUDA submodules use exact gitlinks. | [pin table](../dependencies/trackersplat-historical-pins.md) |
-| Host CUDA extension builds | RTX A5000 requires SM 8.6; nvcc 12.4 cannot compile the SM 10.0/12.0 targets advertised by protected PyTorch cu128, so constrain local builds to `TORCH_CUDA_ARCH_LIST=8.6` or use nvcc 12.8. | [code index](code/INDEX.md) |
+| Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124, but the host has no compiler or nvcc, so TrackerSplat's custom extensions are not yet buildable. | [code index](code/INDEX.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
 | Data | `data/` and `output/` are multi-terabyte, high-fan-out trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 
