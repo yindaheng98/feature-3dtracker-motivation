@@ -71,3 +71,18 @@ sudo docker compose run --rm dev
 
 该操作不会删除作为 OverlayFS `upperdir` 使用的项目内 `data` 和 `output`
 目录，但会删除 Compose 管理的其他命名 volume。
+
+## Harness 提问记录
+
+什么是Harness Engineering
+
+如何开始Harness Engineering
+
+我想用 Harness Engineering 帮我基于现有项目写代码，需要为此准备一套简单的 Harness Engineering 。
+现有项目位于当前目录下的几个 submodules 中，python运行环境位于 .venv 文件夹，相关数据位于 data 和 output 文件夹。
+我想要的 Harness Engineering 主要的运行模式为在当前目录下和用户对话，按照用户的指示做一些实验并记录和分析实验结果、总结经验、根据新的想法修改代码并运行验证等任务，因此需要有记忆功能简要记录已经尝试过的想法和测试结果，看看要怎么写 Harness 能让所有在当前目录下运行的 Agent 都按照指定的格式从对话和实验中提取记忆、保存记忆并在对话中调取记忆。
+这个项目可能导致Harness Engineering哪些部分的Context很长？比如多次运行后的记忆可能过长，多次修改代码可能导致Context过长，过长的Context不利于推理，在写Harness Engineering的时候把相关部分的instruction里加上subagent的指令，让模型将这些太长的Context整理为多个文件并留一个目录性质的文件，在主agent中只读取目录性质的文件并按需调用subagent阅读详细内容回报结果，从而节省主agent的Context空间。
+
+我应该如何在 codex 里调用这个 Harness ？是不是直接在当前目录启动对话就可以了？能否实现让我的实验和对话不需要我显式地指定要保存说明经验，Agent自己知道要保存什么？
+
+如果某个尝试无法达到用户所要求的目标，在退出前应该将修改回退，避免后来的程序在一个失败的尝试上修改。将这一指令加入你刚才写好的Harness提示词中。
