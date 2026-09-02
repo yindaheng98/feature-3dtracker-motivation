@@ -1,0 +1,70 @@
+# Latest mutually resolvable releases are selected by pip unless an API series
+# is constrained below. Never install the original submodule requirement files
+# directly: several of them pin incompatible PyTorch/NumPy versions.
+
+# Shared scientific, image, configuration, and reporting stack
+PyYAML
+opencv-python-headless
+imageio
+imageio-ffmpeg
+matplotlib
+scipy
+scikit-learn
+scikit-image
+pandas
+trimesh
+tqdm
+tensorboard
+lz4
+requests
+absl-py
+
+# MV-TAP and shared training/configuration utilities
+lightning
+mediapy
+einops
+wandb
+hydra-core
+omegaconf
+
+# SpaTrackerV2 runtime and evaluation
+gradio
+pydantic
+einx
+plotly
+prettytable
+# The original decord 0.6 wheel declares Platform: UNKNOWN and makes
+# `pip check` fail on Python 3.12. decord2 is the maintained ABI-compatible
+# distribution and still provides the `decord` import used by SpaTrackerV2.
+decord2
+easydict
+flow-vis
+# SpaTrackerV2 imports moviepy.editor, which was removed in MoviePy 2.x.
+moviepy==1.0.3
+safetensors
+albumentations
+pycolmap
+pyceres
+kornia
+PyJWT
+gdown
+rich
+ray[default]
+transformers
+evo
+# 0.0.35 is the newest release whose wheel metadata accepts Torch 2.11.
+xformers==0.0.35
+
+# TrackerSplat and cross-project model utilities
+taichi
+einshape
+timm
+jaxtyping
+huggingface-hub
+viser
+moderngl
+plyfile
+
+# Open-d4rt's MOVi-F/TFDS data path (not needed by other data backends)
+tensorflow
+tensorflow-datasets

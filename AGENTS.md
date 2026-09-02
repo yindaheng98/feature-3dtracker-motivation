@@ -15,7 +15,19 @@ the user did not explicitly ask for memory to be saved.
 - `SpaTrackerV2/`, `Open-d4rt/`, `MV-TAP/`, and `TrackerSplat/` are independent
   Git submodules. Treat each as a separate repository when checking status,
   commits, diffs, and rollback scope.
-- Use `.venv/bin/python` and `.venv/bin/pip`; do not assume an activated shell.
+- `.venv` is the sole Python environment for this repository. Use explicit
+  commands such as `.venv/bin/python` and `.venv/bin/python -m pip`; do not
+  assume activation and never create Conda, venv, uv, Poetry, or per-submodule
+  environments.
+- Change dependencies only through reproducible package-manager commands from
+  the repository root. Never directly edit, copy, or delete files under
+  `.venv/`, `site-packages/`, or `*.dist-info/`.
+- For shared dependencies, apply
+  `harness/dependencies/protected-stack.txt`; never install a submodule's raw
+  requirements file when it would replace the selected PyTorch/CUDA/NumPy
+  stack. Recheck protected versions and run `pip check` after every dependency
+  change. Native prerequisites and known gaps are documented in
+  `harness/dependencies/native-prerequisites.md`.
 - `data/` is a very large input tree (about 1.3 TB). Treat it as read-only unless
   the user explicitly requests a data change.
 - `output/` is a very large generated-results tree (about 1.5 TB). New raw logs,
@@ -177,6 +189,10 @@ explicitly requests that resource plan.
 - Do not install or upgrade dependencies, download datasets/models, launch an
   unbounded training job, delete artifacts, or mutate external systems unless
   the current request authorizes it.
+- When dependency installation is authorized, use only
+  `.venv/bin/python -m pip ...` commands with the Harness requirement and
+  constraint files. Do not activate or mutate the environment by hand, and do
+  not create an alternative environment to work around a conflict.
 - Do not claim success from a command exit code alone; check the requested metric
   or behavior. If validation cannot run, state why and record the gap.
 

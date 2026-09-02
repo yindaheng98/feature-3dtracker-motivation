@@ -1,0 +1,9 @@
+# Source-only packages that are not published as suitable PyPI distributions.
+# Install after shared-requirements.txt, with --no-deps and protected-stack.txt,
+# so their legacy metadata cannot replace the selected PyTorch/CUDA stack.
+segment-anything @ git+https://github.com/facebookresearch/segment-anything.git@dca509fe793f601edb92606367a655c15ac00fdf
+utils3d @ git+https://github.com/EasternJournalist/utils3d.git@d3a577acf0a9ad7e513a1416449a07b6f47d967f
+cotracker @ git+https://github.com/facebookresearch/co-tracker.git@82e02e8029753ad4ef13cf06be7f4fc5facdda4d
+# ExtrinsicInterpolator is intentionally absent here: importing it requires
+# gaussian-splatting, whose CUDA extension cannot be built without CUDA_HOME
+# and nvcc. See native-prerequisites.md.

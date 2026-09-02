@@ -12,11 +12,22 @@ cross-project comparison or broad code exploration to `code_explorer`.
 
 ## Shared environment caveat
 
-The root `.venv` is Python 3.12.8 and currently does not provide the different
-PyTorch/CUDA stacks described by all four projects. Their documented Python,
-PyTorch, and NumPy requirements conflict. Always run an import/version preflight;
-do not auto-install or switch dependencies during an experiment. A future
-environment decision should likely use one environment per submodule.
+The root `.venv` (Python 3.12.8, Torch 2.11.0+cu128) is the repository's only
+Python environment. The four projects' documented Python, PyTorch, and NumPy
+pins conflict, so do not install their raw requirement files. Install through
+the manifests under `harness/dependencies/`, preserve the protected stack, and
+run an import/version preflight after every dependency change. Do not create a
+per-submodule environment.
+
+The shared Python dependency set is installed and healthy. TrackerSplat's
+`gaussian-splatting`, `InstantSplat`, `reduced-3dgs`, and consequently
+`ExtrinsicInterpolator` remain unavailable until its nested submodules and a
+CUDA 12.8-compatible `nvcc`/`CUDA_HOME` are provided. SpaTrackerV2 also has one
+source compatibility issue: it imports the removed, unused
+`torchvision.io.write_video` symbol; its remaining import graph succeeds when
+that unused legacy import is bypassed. Details are in
+`../dependencies/native-prerequisites.md` and experiment
+`EXP-20260902T035007Z-af34`.
 
 The host exposes four RTX A5000 GPUs, while some scripts assume eight. A command
 requiring more than one GPU, model/data downloads, training, full evaluation, or
@@ -26,4 +37,3 @@ is launched.
 Root `data/` and `output/` are mainly TrackerSplat-oriented and are not implicitly
 mapped to every submodule's expected relative paths. Pass explicit paths and use
 a unique `output/harness-runs/<experiment-id>/` directory.
-

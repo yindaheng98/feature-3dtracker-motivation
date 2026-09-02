@@ -36,6 +36,30 @@ The run wrapper stores complete stdout/stderr and a JSON manifest under
 `output/harness-runs/<experiment-id>/`. It prints only a bounded tail to the
 agent context. The generated Markdown experiment card is the durable summary.
 
+## Single Python environment
+
+The repository root `.venv` is the only allowed Python environment. Do not
+activate it, create another environment for a submodule, or edit files inside
+it. Invoke its interpreter explicitly and make dependency changes only through
+commands from the repository root:
+
+```bash
+.venv/bin/python -m pip install --upgrade \
+  -c harness/dependencies/protected-stack.txt \
+  -r harness/dependencies/shared-requirements.txt
+
+.venv/bin/python -m pip install --upgrade --no-deps \
+  -c harness/dependencies/protected-stack.txt \
+  -r harness/dependencies/git-requirements.txt
+
+.venv/bin/python -m pip check
+```
+
+Do not install the four submodules' original requirement files directly: their
+documented Torch, CUDA, NumPy, and legacy API pins conflict. See
+`dependencies/native-prerequisites.md` before attempting TrackerSplat's CUDA
+extensions or external system tools.
+
 If an attempt does not satisfy the user's acceptance criteria, the agent must
 restore only that attempt's code/configuration changes before ending the turn,
 then compare each affected repository's status with the recorded baseline. A
