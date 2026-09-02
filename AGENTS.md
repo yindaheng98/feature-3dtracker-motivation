@@ -107,14 +107,33 @@ Before executing a meaningful experiment:
 7. Finish the record as `successful`, `failed`, `inconclusive`, or `aborted` and
    update the relevant category and hot indexes before reporting to the user.
 
-When an attempt fails, do not leave later work based on its failed code state.
-Before stopping, revert only changes owned by that attempt to their recorded
-pre-attempt content. Preserve every pre-existing user change. Never use broad
-`git reset --hard`, `git clean`, or repository-wide checkout for rollback. If
-ownership cannot be isolated safely, stop, mark `rollback_pending` in
-`ACTIVE.md` and the experiment detail, and tell the user exactly which paths need
-resolution. A crash or OOM may prevent cleanup; this is why startup audits the
-active record.
+### Mandatory rollback gate for unsuccessful attempts
+
+An attempt is unsuccessful whenever it does not meet the user's stated goal and
+acceptance criteria, even if commands completed, some metrics improved, or part
+of the implementation works. Unless the user explicitly asks to retain a partial
+attempt, later work must never use that unsuccessful code state as its baseline.
+
+Before ending the turn for an unsuccessful attempt:
+
+1. Stop processes started by the attempt and preserve only the evidence needed
+   to explain the result under the attempt's unique output directory.
+2. Revert every source, configuration, script, and generated-in-repository file
+   changed or created by that attempt to its recorded pre-attempt content.
+3. Preserve all pre-existing user changes. Revert only attempt-owned paths and
+   never use broad `git reset --hard`, `git clean`, or repository-wide checkout.
+4. Re-check `git status --short` in the root and every affected submodule. Compare
+   it with the recorded baseline and verify that no attempt-owned dirty path or
+   submodule pointer remains.
+5. Record the attempt as `failed`, `inconclusive`, or `aborted` with
+   `rollback: restored`, including the failure evidence and a reusable lesson.
+
+Rollback verification is part of completion, not an optional cleanup step. If
+ownership cannot be isolated or restoration cannot be verified safely, do not
+pretend cleanup succeeded. Mark `rollback_pending` in `ACTIVE.md` and the
+experiment detail, identify the exact unresolved paths, report the blocker, and
+do not start another code attempt until it is resolved. A crash or OOM may
+prevent cleanup; this is why startup audits the active record.
 
 ## Context delegation
 
@@ -167,3 +186,7 @@ Lead with the outcome. Include changed repositories/files, experiment status and
 headline evidence, validation performed, rollback state if relevant, and the
 next useful action. Do not paste full logs or long diffs; link their relative
 paths and the durable memory record instead.
+
+For any unsuccessful attempt, the final response must say either that rollback
+was verified against the recorded baseline or that rollback is still pending and
+which exact paths block safe restoration.

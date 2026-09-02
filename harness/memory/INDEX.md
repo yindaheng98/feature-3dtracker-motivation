@@ -1,7 +1,7 @@
 # Project Memory Index
 
-Updated: 2026-09-02T02:51:26Z  
-Schema: memory-v1  
+Updated: 2026-09-02T02:58:00Z
+Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
 This is the only long-term memory directory that the main agent reads by
@@ -34,6 +34,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | --- | --- | --- |
 | DEC-HARNESS-001 | Raw logs and artifacts live in `output/harness-runs/`; durable memory stores only compact summaries and relative evidence paths. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-002 | The main agent is the only canonical memory-index writer; subagents are bounded read-only context filters. | [decisions index](decisions/INDEX.md) |
+| DEC-HARNESS-003 | Any attempt that misses the user's acceptance criteria must restore attempt-owned code before exit; an unverified rollback blocks later code attempts. | [decisions index](decisions/INDEX.md) |
 
 ## Knowledge routes
 

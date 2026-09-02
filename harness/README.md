@@ -36,6 +36,13 @@ The run wrapper stores complete stdout/stderr and a JSON manifest under
 `output/harness-runs/<experiment-id>/`. It prints only a bounded tail to the
 agent context. The generated Markdown experiment card is the durable summary.
 
+If an attempt does not satisfy the user's acceptance criteria, the agent must
+restore only that attempt's code/configuration changes before ending the turn,
+then compare each affected repository's status with the recorded baseline. A
+failed attempt with unverified cleanup remains `rollback_pending` and blocks the
+next code attempt. Raw evidence in the unique run directory may be retained; it
+must not be used as proof that the failed code should remain.
+
 Run a harness self-check with:
 
 ```bash
@@ -65,4 +72,3 @@ Project-scoped read-only agent definitions live in `.codex/agents/`:
 
 They are context filters, not extra memory writers. The main agent remains the
 single canonical writer.
-

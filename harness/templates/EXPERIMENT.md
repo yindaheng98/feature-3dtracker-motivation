@@ -54,7 +54,9 @@ rollback: not-needed
 
 ## Cleanup
 
+- Acceptance outcome: met / not-met
 - Working trees after:
+- Baseline comparison for root and each affected submodule:
 - Rollback: not-needed / restored / pending
+- Unresolved attempt-owned paths:
 - Retained changes and reason:
-
