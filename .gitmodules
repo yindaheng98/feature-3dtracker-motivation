@@ -10,3 +10,6 @@
 [submodule "TrackerSplat"]
 	path = TrackerSplat
 	url = https://github.com/yindaheng98/TrackerSplat
+[submodule "Look-Around-and-Pay-Attention-LAPA-"]
+	path = Look-Around-and-Pay-Attention-LAPA-
+	url = https://github.com/ostadabbas/Look-Around-and-Pay-Attention-LAPA-
