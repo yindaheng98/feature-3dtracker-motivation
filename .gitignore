@@ -1,5 +1,8 @@
-.codex
+.codex/*
+!.codex/agents/
+!.codex/agents/*.toml
 .overlay-work
+.harness-state/
 data
 output
 
