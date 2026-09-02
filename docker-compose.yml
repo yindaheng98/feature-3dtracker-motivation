@@ -53,11 +53,9 @@ services:
         if [ -s "/home/${SUDO_USER:-${USER:-USER is required}}/.nvm/nvm.sh" ]; then
           source "/home/${SUDO_USER:-${USER:-USER is required}}/.nvm/nvm.sh"
         fi
-        source "${PWD:?PWD is required}/.venv/bin/activate"
         exec "$@"
       - --
-    command: npm run codex -- -a never -s danger-full-access
-    # command: [ "bash", "runs/develop.sh" ]
+    command: codex -a never -s danger-full-access
 
 volumes:
   codebase-data-overlay:
@@ -66,11 +64,11 @@ volumes:
       type: overlay
       device: overlay
       # Overlayfs requires workdir to live on the same filesystem as upperdir.
-      o: lowerdir=/mnt/minorissd4tb/TrackerSplat/data,upperdir=./data,workdir=./.overlay-work/data
+      o: lowerdir=/mnt/minorissd4tb/TrackerSplat/data,upperdir=${PWD}/data,workdir=${PWD}/.overlay-work/data
   codebase-output-overlay:
     driver: local
     driver_opts:
       type: overlay
       device: overlay
       # Overlayfs requires workdir to live on the same filesystem as upperdir.
-      o: lowerdir=/mnt/minorissd4tb/TrackerSplat/output,upperdir=./output,workdir=./.overlay-work/output
+      o: lowerdir=/mnt/minorissd4tb/TrackerSplat/output,upperdir=${PWD}/output,workdir=${PWD}/.overlay-work/output
