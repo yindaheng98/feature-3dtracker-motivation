@@ -7,3 +7,6 @@
 [submodule "MV-TAP"]
 	path = MV-TAP
 	url = https://github.com/cvlab-kaist/MV-TAP
+[submodule "TrackerSplat"]
+	path = TrackerSplat
+	url = https://github.com/yindaheng98/TrackerSplat
