@@ -23,6 +23,7 @@ across the five submodules while keeping evidence reproducible and context small
 <!-- experiment-rows:start -->
 | ID | Date | Status | Scope | Headline | Detail |
 | --- | --- | --- | --- | --- | --- |
+| EXP-20260902T232819Z-6ddc | 2026-09-02 | running | root .venv and five submodules; dependency repair if needed; no model/data downloads | started | [EXP-20260902T232819Z-6ddc](experiments/2026/09/EXP-20260902T232819Z-6ddc.md) |
 | EXP-20260902T224607Z-fe07 | 2026-09-02 | inconclusive | root .venv dependency repair and Look-Around-and-Pay-Attention-LAPA- import validation; no submodule source edits | LAPA, MV-TAP, Open-d4rt, and SpaTrackerV2 passed executable smokes on protected Torch 2.6.0+cu124; TrackerSplat remains blocked by missing … | [EXP-20260902T224607Z-fe07](experiments/2026/09/EXP-20260902T224607Z-fe07.md) |
 | EXP-20260902T035007Z-af34 | 2026-09-02 | successful | root .venv dependency resolution and import validation for four submodules; no source changes inside submodules | Shared Python dependencies installed in root .venv; pip check clean, protected Torch/CUDA stack unchanged, imports and XFormers CUDA kernel… | [EXP-20260902T035007Z-af34](experiments/2026/09/EXP-20260902T035007Z-af34.md) |
 <!-- experiment-rows:end -->
@@ -38,13 +39,14 @@ Keep at most 12 closed experiments here. The full directory is in
 | DEC-HARNESS-002 | The main agent is the only canonical memory-index writer; subagents are bounded read-only context filters. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-003 | Any attempt that misses the user's acceptance criteria must restore attempt-owned code before exit; an unverified rollback blocks later code attempts. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-004 | The root `.venv` is the only Python environment; dependency changes use explicit pip commands plus protected-stack constraints, never direct environment-file edits. | [decisions index](decisions/INDEX.md) |
+| DEC-HARNESS-005 | Build TrackerSplat with its documented repository-local `pip install --target . --upgrade --no-deps .` layout, invoked through the root `.venv`. | [decisions index](decisions/INDEX.md) |
 
 ## Knowledge routes
 
 | Topic | One-line summary | Route |
 | --- | --- | --- |
 | Projects | Five submodules have different dependencies, entrypoints, and risk levels. | [project index](../projects/INDEX.md) |
-| Manual TrackerSplat dependencies | The root README records the five pinned Git dependencies, protected-stack constraint, SM 8.6 build target, and post-install `pip check`. | [root README](../../README.md) |
+| Manual TrackerSplat dependencies | The root README records the five pinned Git dependencies, protected-stack constraint, SM 8.6 build target, repository-local `--target .` install, and post-install `pip check`. | [root README](../../README.md) |
 | TrackerSplat historical dependencies | External repos are pinned to their last commits before TrackerSplat HEAD on 2025-11-23; nested CUDA submodules use exact gitlinks. | [pin table](../dependencies/trackersplat-historical-pins.md) |
 | Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124, but the host has no compiler or nvcc, so TrackerSplat's custom extensions are not yet buildable. | [code index](code/INDEX.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
