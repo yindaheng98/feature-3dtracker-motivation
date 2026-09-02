@@ -55,6 +55,15 @@ TORCH_CUDA_ARCH_LIST=8.6 .venv/bin/python -m pip install \
   git+https://github.com/facebookresearch/co-tracker.git@82e02e8029753ad4ef13cf06be7f4fc5facdda4d
 ```
 
+然后必须在 `TrackerSplat/` 目录下将 TrackerSplat 安装到该目录：
+
+```bash
+(
+  cd TrackerSplat
+  ../.venv/bin/python -m pip install --target . --upgrade --no-deps .
+)
+```
+
 安装后检查共享环境是否仍然一致：
 
 ```bash
