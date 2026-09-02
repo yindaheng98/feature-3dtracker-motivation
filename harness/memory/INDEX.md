@@ -43,7 +43,9 @@ Keep at most 12 closed experiments here. The full directory is in
 | Topic | One-line summary | Route |
 | --- | --- | --- |
 | Projects | Four submodules have different dependencies, entrypoints, and risk levels. | [project index](../projects/INDEX.md) |
+| Manual TrackerSplat dependencies | The root README records the five pinned Git dependencies, protected-stack constraint, SM 8.6 build target, and post-install `pip check`. | [root README](../../README.md) |
 | TrackerSplat historical dependencies | External repos are pinned to their last commits before TrackerSplat HEAD on 2025-11-23; nested CUDA submodules use exact gitlinks. | [pin table](../dependencies/trackersplat-historical-pins.md) |
+| Host CUDA extension builds | RTX A5000 requires SM 8.6; nvcc 12.4 cannot compile the SM 10.0/12.0 targets advertised by protected PyTorch cu128, so constrain local builds to `TORCH_CUDA_ARCH_LIST=8.6` or use nvcc 12.8. | [code index](code/INDEX.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
 | Data | `data/` and `output/` are multi-terabyte, high-fan-out trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 

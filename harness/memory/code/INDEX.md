@@ -10,3 +10,9 @@
 Per-experiment cards record exact commit, branch, dirty paths, changed symbols,
 and diff stats. Never place full diffs in this index.
 
+## Host build facts
+
+| Date | Scope | Reusable fact |
+| --- | --- | --- |
+| 2026-09-02 | Root `.venv` CUDA extensions | The host GPUs are RTX A5000 (SM 8.6), `/usr/local/cuda` is nvcc 12.4, and protected PyTorch 2.11 is built for CUDA 12.8 with an architecture list through SM 12.0. Unconstrained extension builds can fail when nvcc 12.4 receives `compute_100`; for this host, constrain builds to `TORCH_CUDA_ARCH_LIST=8.6` or provide a CUDA 12.8 compiler. |
+

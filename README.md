@@ -37,7 +37,31 @@ python -m pip install --upgrade pip
 
 根据需要在该虚拟环境中安装各子项目的依赖。`.venv` 会随项目目录挂载进容器。
 
-### 4. 登录 Codex
+### 4. 手动安装 TrackerSplat 依赖
+
+以下依赖需要在项目根目录手动安装。当前宿主机使用 RTX A5000 和 CUDA
+12.4 编译器，因此需将 CUDA 扩展的目标架构限制为 SM 8.6，避免
+InstantSplat 构建时生成该编译器不支持的目标：
+
+```bash
+TORCH_CUDA_ARCH_LIST=8.6 .venv/bin/python -m pip install \
+  --no-deps \
+  --no-build-isolation \
+  -c harness/dependencies/protected-stack.txt \
+  git+https://github.com/yindaheng98/gaussian-splatting.git@017fe9b04015dc71a3eb153840e7937c7fa76f77 \
+  git+https://github.com/yindaheng98/InstantSplat.git@303e98cec6180ee7484782c23edef6eb990171bd \
+  git+https://github.com/yindaheng98/reduced-3dgs.git@f8d65eb171925d04dace3f68c175d609fd4ccec1 \
+  git+https://github.com/yindaheng98/ExtrinsicInterpolator.git@5de703b258d65c39c394a8e7a08fa6391a66155c \
+  git+https://github.com/facebookresearch/co-tracker.git@82e02e8029753ad4ef13cf06be7f4fc5facdda4d
+```
+
+安装后检查共享环境是否仍然一致：
+
+```bash
+.venv/bin/python -m pip check
+```
+
+### 5. 登录 Codex
 
 Compose 将 `CODEX_HOME` 设置为项目内的 `.codex`。首次运行前使用相同目录登录：
 
