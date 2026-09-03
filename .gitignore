@@ -4,6 +4,8 @@
 .overlay-work
 .harness-state/
 data
+!harness/memory/data/
+!harness/memory/data/**
 output
 checkpoints
 

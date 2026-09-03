@@ -1,8 +1,5 @@
 # Active Work
 
-There is no unfinished experiment or pending restoration.
-
-When work is interrupted or restoration cannot be verified, replace this text
-with a concise free-form note containing only what the next Agent needs: the
-goal, affected repositories and paths, remaining processes if any, evidence
-location, and exact cleanup still required.
+No unfinished experiment or attempt-owned patch is active. The bounded PStudio
+bring-up for SpaTrackerV2, Open-d4rt, MV-TAP, and LAPA completed successfully;
+see `experiments/panoptic-four-project-bringup.md`.

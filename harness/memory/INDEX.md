@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T05:32:20Z
+Updated: 2026-09-03T07:13:01Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -22,6 +22,7 @@ across the five submodules while keeping evidence reproducible and context small
 
 | Date/topic | Reusable conclusion | Detail |
 | --- | --- | --- |
+| 2026-09-03 · Panoptic four-project bring-up | SpaTrackerV2, Open-d4rt, MV-TAP, and LAPA all completed real-checkpoint forwards on shared `juggle_7`; adapters and bounded metrics are reproducible. | [result](experiments/panoptic-four-project-bringup.md) |
 | 2026-09-02 · shared environment and five-project smoke validation | Earlier setup checks were consolidated into the environment ownership and troubleshooting guide. | [environment guide](../dependencies/native-prerequisites.md) |
 
 Keep at most 12 recent routes here. The full directory is in
@@ -52,6 +53,8 @@ Keep at most 12 recent routes here. The full directory is in
 | Environment troubleshooting | Diagnose Python, wheel ABI, native toolchain, system/image, GPU, permissions, and external inputs separately; route each layer to Agent or user ownership. | [environment guide](../dependencies/native-prerequisites.md) |
 | Model checkpoints | The normalized root contains load-validated Spa Front+Offline, Open-d4rt 32-frame, LAPA Joint, and DINOv2 in the HF cache, plus flat MV-TAP/TrackerSplat files. | [checkpoint guide](../dependencies/model-checkpoints.md) |
 | Experiment code | Experiment code lives under flexibly organized `experiments/`; reuse or isolate it according to the simplest practical implementation, and keep records/scripts many-to-many. | [workspace policy](../../experiments/README.md) |
+| 3D tracking datasets | TAPVid-3D/WorldTrack/LAPA-MC directly assess 3D trajectories; MV-TAP currently reports projected 2D tracking, while TrackerSplat mainly reports reconstruction quality. | [dataset map](data/tracking-evaluation-datasets.md) |
+| Panoptic adaptation | Use TAPVid-3D PStudio annotations for arbitrary-point ground truth; export only the project-specific formats needed, while raw Panoptic alone supports a custom skeletal-joint test. | [adaptation map](data/panoptic-studio-adaptation.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
 | Data | `data/`, `output/`, and `checkpoints/` are large overlay trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 

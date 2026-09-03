@@ -129,6 +129,8 @@ cd Look-Around-and-Pay-Attention-LAPA-
 Feature precomputation calls
 `AutoModel.from_pretrained("facebook/dinov2-base")`, which uses `HF_HOME`.
 Optional `--use_cotracker` calls Torch Hub and therefore uses `TORCH_HOME`.
+The real PStudio multi-camera validation downloaded CoTracker3 Offline through
+that loader to `checkpoints/torch/hub/checkpoints/scaled_offline.pth`.
 
 ### TrackerSplat
 
@@ -161,6 +163,9 @@ Validated on 2026-09-03:
 - MV-TAP loads from `checkpoints/MVTAP.ckpt` through Lightning.
 - LAPA Joint loads from its Hub snapshot with strict state-dict matching.
 - DINOv2 Base loads from `HF_HOME` through Transformers offline mode.
+- CoTracker3 Offline loads from `TORCH_HOME`; its cached
+  `scaled_offline.pth` is 101,890,938 bytes with SHA-256
+  `2670d4562ed69326dda775a26e54883925cd11b6fc9b24cb7aa9f8078bce7834`.
 
 Optional variants not downloaded: SpaTrackerV2 Online, Open-d4rt 48-frame, and
 the TAPVid-3D-MC/PointOdyssey-MC-specific LAPA checkpoints.
