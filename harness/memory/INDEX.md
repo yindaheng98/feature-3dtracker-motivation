@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T00:01:46Z
+Updated: 2026-09-03T00:13:22Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -16,7 +16,7 @@ across the five submodules while keeping evidence reproducible and context small
 
 | ID | Scope | Status | One-line state | Detail |
 | --- | --- | --- | --- | --- |
-| HARNESS-001 | repository root | ready | Memory, bounded run capture, failure blocking, and context delegation are installed and self-checked | [Harness README](../README.md) |
+| HARNESS-001 | repository root | ready | Memory, bounded run capture, failure rollback, context delegation, and the user-facing setup/run guide are installed and self-checked | [Harness README](../README.md) |
 
 ## Recent experiments
 
@@ -45,7 +45,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | Topic | One-line summary | Route |
 | --- | --- | --- |
 | Projects | Five submodules have different dependencies, entrypoints, and risk levels. | [project index](../projects/INDEX.md) |
-| Manual TrackerSplat dependencies | The root README records the five pinned Git dependencies, protected-stack constraint, SM 8.6 build target, repository-local `--target .` install, and post-install `pip check`. | [root README](../../README.md) |
+| Setup and operation | The root README documents host/GPU prerequisites, submodules, OverlayFS, the sole `.venv`, constrained shared dependencies, TrackerSplat native builds, validation, Codex startup, and Harness behavior. | [root README](../../README.md) |
 | TrackerSplat historical dependencies | External repos are pinned to their last commits before TrackerSplat HEAD on 2025-11-23; nested CUDA submodules use exact gitlinks. | [pin table](../dependencies/trackersplat-historical-pins.md) |
 | Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124. The runtime can execute the built TrackerSplat CUDA extensions but still has no `gcc`/`nvcc` for rebuilds. | [code index](code/INDEX.md) |
 | Environment troubleshooting | Diagnose Python, wheel ABI, native toolchain, system/image, GPU, permissions, and external inputs separately; route each layer to Agent or user ownership. | [environment guide](../dependencies/native-prerequisites.md) |
