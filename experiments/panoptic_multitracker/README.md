@@ -76,15 +76,15 @@ HF_HUB_OFFLINE=1 PYTHONPATH="$PWD" ../.venv/bin/python \
   --out_dir ../output/panoptic_multitracker/lapa/features_eval \
   --data_root ../experiments/panoptic_multitracker/lapa_juggle7 \
   --device cuda:1 --use_cotracker --max_points 64
-HF_HOME="../checkpoints/huggingface" HF_HUB_OFFLINE=1 PYTHONPATH="$PWD" \
-../.venv/bin/python evaluate_lapa.py \
-  --checkpoint ../checkpoints/huggingface/hub/models--bishoygaloaa--LAPA-Joint/snapshots/0cce9285a629fb05a843edd690d38ca4107de177/lapa.pt \
-  --mc_dir ../output/panoptic_multitracker/lapa/mc \
-  --feature_dir ../output/panoptic_multitracker/lapa/features_eval \
-  --data_root ../experiments/panoptic_multitracker/lapa_juggle7 \
-  --device cuda:1 --num_views 3 --max_points 64 \
-  --output ../output/panoptic_multitracker/lapa/eval_juggle7_metrics.json
 cd ..
+HF_HOME="$PWD/checkpoints/huggingface" HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES=1 \
+.venv/bin/python experiments/panoptic_multitracker/run_lapa.py \
+  --checkpoint checkpoints/huggingface/hub/models--bishoygaloaa--LAPA-Joint/snapshots/0cce9285a629fb05a843edd690d38ca4107de177/lapa.pt \
+  --mc-dir output/panoptic_multitracker/lapa/mc \
+  --feature-dir output/panoptic_multitracker/lapa/features_eval \
+  --data-root experiments/panoptic_multitracker/lapa_juggle7 \
+  --output output/panoptic_multitracker/lapa/eval_juggle7_real_metrics.json \
+  --device cuda:0 --max-points 64
 ```
 
 ## MV-TAP
@@ -109,9 +109,26 @@ CUDA_VISIBLE_DEVICES=1 .venv/bin/python \
 | Open-d4rt | 32 frames, 221 queries | APD 0.9792; EPE 0.0581 m |
 | SpaTrackerV2 | 16 frames, 32 queries | OA 0.9844; scaled EPE 0.1180 m |
 | MV-TAP | 3 views, 16 frames, 32 queries | 2D AJ 0.8885; triangulated MPJPE 0.01424 m |
-| LAPA Joint | 3 views, 150 frames, 64 queries | 3D-AJ 43.17; MPJPE 0.02620 m |
+| LAPA Joint | 3 views, 150 frames, 64 queries | 3D-AJ 20.24; MPJPE 0.09921 m |
 
 All four runs loaded their real pretrained weights. Open-d4rt and MV-TAP had
-zero missing and zero unexpected checkpoint keys. LAPA's three feature caches
-have `use_cotracker=1`; 99.33% of their coordinates differ from GT, so the
-reported run did not take the silent GT fallback path.
+zero missing and zero unexpected checkpoint keys. `run_lapa.py` explicitly
+binds `eval_feature_dir` and rejects missing or GT-like caches. LAPA's three
+feature caches have `use_cotracker=1`; 99.33% of their coordinates differ from
+GT, so the reported run did not take the silent GT fallback path.
+
+## Temporal-stride pilot
+
+The stage-1 degradation test uses `prepare_temporal_stride.py` to lock 64 point
+IDs and 16 raw-frame indices for strides `1, 2, 3, 4, 6, 8`. Raw model outputs
+are produced by `run_d4rt.py`, `run_spatracker.py`, `run_mvtap.py`, and
+`run_lapa.py`. `evaluate_temporal_stride.py` excludes the query frame, aligns
+scale only from that frame, applies one TAPVid-3D metric implementation, and
+writes:
+
+- `output/panoptic_multitracker/temporal_stride/common_metrics.csv`
+- `output/panoptic_multitracker/temporal_stride/accuracy_vs_stride.png`
+- `output/panoptic_multitracker/temporal_stride/aj3d_retention_vs_stride.png`
+
+LAPA's CoTracker caches are recomputed from the sparsely sampled video for every
+stride; they are not subsampled from a dense-video tracker run.

@@ -130,7 +130,8 @@ def main() -> None:
     ).reshape(views, times, channels, 384, 512)
     trajectory_np[..., 0] *= 512 / width
     trajectory_np[..., 1] *= 384 / height
-    k_np = np.stack(intrinsics)
+    native_k_np = np.stack(intrinsics)
+    k_np = native_k_np.copy()
     k_np[:, 0] *= 512 / width
     k_np[:, 1] *= 384 / height
     w2c_np = np.stack(extrinsics)
@@ -206,6 +207,16 @@ def main() -> None:
         gt_uv=trajectory_np,
         gt_visible=visible_np,
         selected_indices=selected,
+        w2c_ref=w2c_np[0],
+        intrinsics=np.asarray(
+            [
+                native_k_np[0, 0, 0],
+                native_k_np[0, 1, 1],
+                native_k_np[0, 0, 2],
+                native_k_np[0, 1, 2],
+            ],
+            dtype=np.float32,
+        ),
     )
     print(json.dumps(native, indent=2))
 

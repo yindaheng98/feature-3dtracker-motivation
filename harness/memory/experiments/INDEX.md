@@ -6,6 +6,7 @@ the actual work.
 
 | Date/topic | Reusable conclusion | Detail |
 | --- | --- | --- |
+| 2026-09-03 · PStudio temporal-stride pilot | All 24 forwards completed; three models degrade overall, while SpaTrackerV2 is non-monotonic on the single clip, requiring multi-scene confirmation. | [result](panoptic-temporal-stride-pilot.md) |
 | 2026-09-03 · Panoptic four-project bring-up | Four real pretrained pipelines completed on shared `juggle_7`; Open-d4rt and Spa report 3D tracking, MV-TAP adds calibrated triangulation, and LAPA uses real CoTracker+DINO features. | [result](panoptic-four-project-bringup.md) |
 | 2026-09-02 · environment setup and compatibility | Earlier setup checks were consolidated after their reusable evidence and decisions were merged. | [environment guide](../../dependencies/native-prerequisites.md) |
 

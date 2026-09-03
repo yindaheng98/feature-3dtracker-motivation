@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T07:13:01Z
+Updated: 2026-09-03T20:41:25Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -22,6 +22,7 @@ across the five submodules while keeping evidence reproducible and context small
 
 | Date/topic | Reusable conclusion | Detail |
 | --- | --- | --- |
+| 2026-09-03 · PStudio temporal-stride pilot | Fixed 16-frame/64-point runs completed at six strides for all four models; three degrade overall and Spa is non-monotonic on `juggle_7`, so multi-scene confirmation is required. | [result](experiments/panoptic-temporal-stride-pilot.md) |
 | 2026-09-03 · Panoptic four-project bring-up | SpaTrackerV2, Open-d4rt, MV-TAP, and LAPA all completed real-checkpoint forwards on shared `juggle_7`; adapters and bounded metrics are reproducible. | [result](experiments/panoptic-four-project-bringup.md) |
 | 2026-09-02 · shared environment and five-project smoke validation | Earlier setup checks were consolidated into the environment ownership and troubleshooting guide. | [environment guide](../dependencies/native-prerequisites.md) |
 
@@ -60,8 +61,11 @@ Keep at most 12 recent routes here. The full directory is in
 
 ## Open ideas
 
-See [ideas/INDEX.md](ideas/INDEX.md). Keep only concrete, testable ideas here
-when they become immediately relevant.
+| ID | Testable idea | Detail |
+| --- | --- | --- |
+| IDEA-TEMPORAL-001 | Measure four trackers under fixed 16-frame inputs at source strides 1–8, with fixed queries and one common 3D evaluator; keep matched-horizon sparsity as a separate ablation. | [protocol](ideas/temporal-stride-robustness.md) |
+
+See [ideas/INDEX.md](ideas/INDEX.md) for the full idea directory.
 
 ## Archive routes
 

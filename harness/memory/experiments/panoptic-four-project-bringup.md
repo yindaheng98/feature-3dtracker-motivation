@@ -41,11 +41,14 @@ actual model forwards.
 | Open-d4rt 32CLIP | 32 frames, 221 frame-0-visible queries | 0 missing/unexpected keys; APD 0.9792; EPE 0.0581 m | `output/panoptic_multitracker/opend4rt/eval_juggle7_32f/summary.json` |
 | SpaTrackerV2 Front + Offline | 16 frames, 32 queries; Front inferred depth/intrinsics from RGB | OA 0.9844; average 3D threshold accuracy 0.1301; median-scaled EPE 0.1180 m | `output/panoptic_multitracker/spatracker/juggle7_16f_metrics.json` |
 | MV-TAP | cameras 7/8/9, 16 frames, 32 queries | 0 missing/unexpected keys; 2D AJ 0.8885; triangulated 3D APD 0.9039; MPJPE 0.01424 m | `output/panoptic_multitracker/mvtap/juggle7_16f_metrics.json` |
-| LAPA Joint | cameras 7/8/9, 150 frames, 64 queries | APD 45.73; 3D-AJ 43.17; MPJPE 0.02620 m | `output/panoptic_multitracker/lapa/eval_juggle7_metrics.json` |
+| LAPA Joint | cameras 7/8/9, 150 frames, 64 queries | APD 27.11; 3D-AJ 20.24; MPJPE 0.09921 m | `output/panoptic_multitracker/lapa/eval_juggle7_real_metrics.json` |
 
 LAPA's three H5 inputs have `use_cotracker=1`, tracker-visible fractions from
-0.7301 to 0.8381, and 99.33% of 2D coordinates differ from GT. This rules out
-the pipeline's silent GT fallback. DINOv2 loaded from the shared Hugging Face
+0.7301 to 0.8381, and 99.33% of 2D coordinates differ from GT. The validated
+runner explicitly passes the eval-cache directory into the dataset and rejects
+missing or GT-like caches. Calling the repository evaluator with only
+`feature_dir` does not bind `eval_feature_dir` and can silently use projected GT
+2D with zero appearance features. DINOv2 loaded from the shared Hugging Face
 cache and CoTracker3 Offline from `checkpoints/torch/`.
 
 The LAPA geometry builder found six `juggle` cameras. Its calibration gate
