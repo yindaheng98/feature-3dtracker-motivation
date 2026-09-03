@@ -41,8 +41,10 @@ the user did not explicitly ask for memory to be saved.
   the user explicitly requests a data change.
 - `checkpoints/` is the single shared root for all pretrained models and model
   caches. It is a large overlay (about 86 GB from the host TrackerSplat dump).
-  Keep Hugging Face and Torch Hub caches under `checkpoints/huggingface/` and
-  `checkpoints/torch/`. Treat the model root as read-only unless the user
+  Every Hugging Face acquisition belongs in the standard cache rooted at
+  `checkpoints/huggingface/`; Torch Hub uses `checkpoints/torch/`; standalone
+  files obtained elsewhere stay flat at the checkpoint root unless their loader
+  requires another layout. Treat the model root as read-only unless the user
   explicitly requests a checkpoint change.
 - `output/` is a very large generated-results tree (about 1.5 TB). New raw logs,
   metrics, checkpoints, visualizations, and manifests belong under

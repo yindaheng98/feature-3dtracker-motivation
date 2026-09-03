@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T02:20:28Z
+Updated: 2026-09-03T03:08:40Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -39,7 +39,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | DEC-HARNESS-004 | The root `.venv` is the only Python environment; dependency changes use explicit pip commands plus protected-stack constraints, never direct environment-file edits. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-005 | Build TrackerSplat with its documented repository-local `pip install --target . --upgrade --no-deps .` layout, invoked through the root `.venv`. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-006 | Agent owns authorized Python/wheel repairs; the user/host owns durable system, toolchain, driver, container-ABI, input, and access prerequisites. | [environment guide](../dependencies/native-prerequisites.md) |
-| DEC-HARNESS-008 | Use root `checkpoints/` as the single pretrained-model and cache root; SpaTrackerV2 uses it via `HF_HOME`. | [decision card](decisions/DEC-HARNESS-008.md) |
+| DEC-HARNESS-008 | Use root `checkpoints/` with acquisition-based routing: shared standard Hugging Face/Torch caches and flat standalone files. | [decision card](decisions/DEC-HARNESS-008.md) |
 | DEC-HARNESS-009 | Delete fully abandoned Harness content and all references when no surviving project state requires its history. | [decisions index](decisions/INDEX.md) |
 
 ## Knowledge routes
@@ -51,7 +51,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | TrackerSplat historical dependencies | External repos are pinned to their last commits before TrackerSplat HEAD on 2025-11-23; nested CUDA submodules use exact gitlinks. | [pin table](../dependencies/trackersplat-historical-pins.md) |
 | Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124. The runtime can execute the built TrackerSplat CUDA extensions but still has no `gcc`/`nvcc` for rebuilds. | [code index](code/INDEX.md) |
 | Environment troubleshooting | Diagnose Python, wheel ABI, native toolchain, system/image, GPU, permissions, and external inputs separately; route each layer to Agent or user ownership. | [environment guide](../dependencies/native-prerequisites.md) |
-| Model checkpoints | Root `checkpoints/` is the shared model root. TrackerSplat's 14 published files are present; Open-d4rt, MV-TAP, LAPA, and SpaTrackerV2 models remain to download. | [checkpoint guide](../dependencies/model-checkpoints.md) |
+| Model checkpoints | The normalized root contains load-validated Spa Front+Offline, Open-d4rt 32-frame, LAPA Joint, and DINOv2 in the HF cache, plus flat MV-TAP/TrackerSplat files. | [checkpoint guide](../dependencies/model-checkpoints.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
 | Data | `data/`, `output/`, and `checkpoints/` are large overlay trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 
