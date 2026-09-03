@@ -6,6 +6,8 @@ updated_at: YYYY-MM-DDTHH:MM:SSZ
 status: planned
 scope: submodule-or-root
 hypothesis: "A testable claim"
+code_mode: reuse
+code_dir: experiments/topic
 output_dir: output/harness-runs/EXP-...
 rollback: not-needed
 ---
@@ -22,6 +24,10 @@ rollback: not-needed
 - Root commit and dirty paths:
 - Submodule commit(s), branches, and dirty paths:
 - Python executable: `.venv/bin/python`
+- Experiment code placement: reuse / new
+- Primary experiment code directory: `experiments/...`
+- Experiment scripts/components used:
+- Placement rationale:
 - Dataset refs and split:
 - Config refs:
 - Seed:

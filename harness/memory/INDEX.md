@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T03:08:40Z
+Updated: 2026-09-03T03:22:57Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -41,6 +41,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | DEC-HARNESS-006 | Agent owns authorized Python/wheel repairs; the user/host owns durable system, toolchain, driver, container-ABI, input, and access prerequisites. | [environment guide](../dependencies/native-prerequisites.md) |
 | DEC-HARNESS-008 | Use root `checkpoints/` with acquisition-based routing: shared standard Hugging Face/Torch caches and flat standalone files. | [decision card](decisions/DEC-HARNESS-008.md) |
 | DEC-HARNESS-009 | Delete fully abandoned Harness content and all references when no surviving project state requires its history. | [decisions index](decisions/INDEX.md) |
+| DEC-HARNESS-010 | Keep Harness infrastructure in `harness/`; organize experiment-specific code flexibly under `experiments/` and record a reuse/new placement decision for every experiment. | [decision card](decisions/DEC-HARNESS-010.md) |
 
 ## Knowledge routes
 
@@ -52,6 +53,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124. The runtime can execute the built TrackerSplat CUDA extensions but still has no `gcc`/`nvcc` for rebuilds. | [code index](code/INDEX.md) |
 | Environment troubleshooting | Diagnose Python, wheel ABI, native toolchain, system/image, GPU, permissions, and external inputs separately; route each layer to Agent or user ownership. | [environment guide](../dependencies/native-prerequisites.md) |
 | Model checkpoints | The normalized root contains load-validated Spa Front+Offline, Open-d4rt 32-frame, LAPA Joint, and DINOv2 in the HF cache, plus flat MV-TAP/TrackerSplat files. | [checkpoint guide](../dependencies/model-checkpoints.md) |
+| Experiment code | Experiment code lives under flexible experiment/family directories in `experiments/`; records and scripts are many-to-many, with an explicit reuse/new choice at experiment start. | [workspace policy](../../experiments/README.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
 | Data | `data/`, `output/`, and `checkpoints/` are large overlay trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 

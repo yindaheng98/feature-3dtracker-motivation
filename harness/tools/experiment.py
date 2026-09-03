@@ -23,9 +23,16 @@ MEMORY = ROOT / "harness" / "memory"
 ACTIVE = MEMORY / "ACTIVE.md"
 HOT_INDEX = MEMORY / "INDEX.md"
 EXPERIMENT_INDEX = MEMORY / "experiments" / "INDEX.md"
+EXPERIMENT_CODE = ROOT / "experiments"
 STATE = ROOT / ".harness-state"
 LOCK = STATE / "memory.lock"
-SUBMODULES = ("SpaTrackerV2", "Open-d4rt", "MV-TAP", "TrackerSplat")
+SUBMODULES = (
+    "SpaTrackerV2",
+    "Open-d4rt",
+    "MV-TAP",
+    "TrackerSplat",
+    "Look-Around-and-Pay-Attention-LAPA-",
+)
 VALID_STATUS = {"planned", "running", "successful", "failed", "inconclusive", "aborted"}
 RAW_SUFFIXES = {".log", ".jsonl", ".npy", ".npz", ".zip", ".mp4", ".png", ".jpg", ".ply", ".pt", ".pth", ".ckpt"}
 
@@ -148,6 +155,17 @@ def sanitize_cell(value: str, limit: int = 140) -> str:
     return compact if len(compact) <= limit else compact[: limit - 1] + "…"
 
 
+def resolve_experiment_code_dir(value: str) -> Path:
+    requested = Path(value)
+    if requested.is_absolute():
+        raise SystemExit("experiment code directory must be repository-relative")
+    resolved = (ROOT / requested).resolve()
+    code_root = EXPERIMENT_CODE.resolve()
+    if resolved == code_root or code_root not in resolved.parents:
+        raise SystemExit("experiment code directory must be below experiments/")
+    return resolved
+
+
 def upsert_table_row(path: Path, start: str, end: str, record_id: str, row: str) -> None:
     text = path.read_text(encoding="utf-8")
     before, sep, rest = text.partition(start)
@@ -172,7 +190,8 @@ def find_record(experiment_id: str) -> Path:
 
 
 def render_record(experiment_id: str, title: str, hypothesis: str, scope: str,
-                  created: dt.datetime, detail: Path, output_dir: Path) -> str:
+                  code_mode: str, code_dir: str, created: dt.datetime,
+                  detail: Path, output_dir: Path) -> str:
     snapshots = git_snapshot()
     snapshot_rows = "\n".join(
         f"| `{row['repo']}` | `{row['branch']}` | `{row['commit']}` | {sanitize_cell(row['dirty_paths'], 240)} |"
@@ -186,6 +205,8 @@ updated_at: {iso(created)}
 status: running
 scope: {json.dumps(scope, ensure_ascii=False)}
 hypothesis: {json.dumps(hypothesis, ensure_ascii=False)}
+code_mode: {code_mode}
+code_dir: {code_dir}
 output_dir: {output_dir.relative_to(ROOT)}
 rollback: not-needed
 ---
@@ -205,6 +226,10 @@ rollback: not-needed
 {snapshot_rows}
 
 - Python executable: `.venv/bin/python`
+- Experiment code placement: `{code_mode}`
+- Primary experiment code directory: `{code_dir}`
+- Experiment scripts/components used:
+- Placement rationale:
 - Dataset refs and split:
 - Config refs:
 - Seed:
@@ -257,13 +282,23 @@ def command_start(args: argparse.Namespace) -> int:
     experiment_id = f"EXP-{created.strftime('%Y%m%dT%H%M%SZ')}-{secrets.token_hex(2)}"
     detail = MEMORY / "experiments" / created.strftime("%Y") / created.strftime("%m") / f"{experiment_id}.md"
     output_dir = ROOT / "output" / "harness-runs" / experiment_id
+    code_dir = resolve_experiment_code_dir(args.code_dir)
+    code_dir_rel = code_dir.relative_to(ROOT).as_posix()
     with memory_lock():
         active = active_metadata()
         if active.get("status") not in {None, "idle"} or active.get("experiment_id") not in {None, "null"}:
             raise SystemExit(f"active experiment must be audited first: {active.get('experiment_id')}")
+        if args.code_mode == "reuse":
+            if not code_dir.is_dir():
+                raise SystemExit(f"reuse code directory does not exist: {code_dir_rel}")
+        else:
+            if code_dir.exists():
+                raise SystemExit(f"new code directory already exists: {code_dir_rel}")
+            code_dir.mkdir(parents=True, exist_ok=False)
         output_dir.mkdir(parents=True, exist_ok=False)
         atomic_write(detail, render_record(
-            experiment_id, args.title, args.hypothesis, args.scope, created, detail, output_dir
+            experiment_id, args.title, args.hypothesis, args.scope,
+            args.code_mode, code_dir_rel, created, detail, output_dir
         ))
         rel_detail = detail.relative_to(ROOT).as_posix()
         rel_output = output_dir.relative_to(ROOT).as_posix()
@@ -278,7 +313,13 @@ def command_start(args: argparse.Namespace) -> int:
         upsert_table_row(EXPERIMENT_INDEX, "<!-- experiment-rows:start -->", "<!-- experiment-rows:end -->", experiment_id, exp_row)
         upsert_table_row(HOT_INDEX, "<!-- experiment-rows:start -->", "<!-- experiment-rows:end -->", experiment_id, hot_row)
         atomic_write(ACTIVE, active_text(experiment_id, rel_detail, rel_output))
-    print(json.dumps({"experiment_id": experiment_id, "detail": rel_detail, "output_dir": rel_output}, ensure_ascii=False, indent=2))
+    print(json.dumps({
+        "experiment_id": experiment_id,
+        "detail": rel_detail,
+        "output_dir": rel_output,
+        "code_mode": args.code_mode,
+        "code_dir": code_dir_rel,
+    }, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -452,11 +493,28 @@ def command_check(_: argparse.Namespace) -> int:
                 errors.append(str(exc))
     for record in (MEMORY / "experiments").glob("*/*/EXP-*.md"):
         metadata = parse_frontmatter(record.read_text(encoding="utf-8"))
-        for key in ("schema", "id", "created_at", "updated_at", "status", "scope", "hypothesis", "output_dir", "rollback"):
+        for key in (
+            "schema", "id", "created_at", "updated_at", "status", "scope",
+            "hypothesis", "code_mode", "code_dir", "output_dir", "rollback",
+        ):
             if not metadata.get(key):
                 errors.append(f"{record.relative_to(ROOT)} missing frontmatter key {key}")
         if metadata.get("status") not in VALID_STATUS:
             errors.append(f"{record.relative_to(ROOT)} has invalid status {metadata.get('status')}")
+        if metadata.get("code_mode") not in {"reuse", "new"}:
+            errors.append(f"{record.relative_to(ROOT)} has invalid code_mode {metadata.get('code_mode')}")
+        code_dir = metadata.get("code_dir", "")
+        if code_dir:
+            try:
+                resolved_code_dir = resolve_experiment_code_dir(code_dir)
+            except SystemExit as exc:
+                errors.append(f"{record.relative_to(ROOT)} invalid code_dir: {exc}")
+            else:
+                normalized_code_dir = resolved_code_dir.relative_to(ROOT).as_posix()
+                if normalized_code_dir != code_dir:
+                    errors.append(
+                        f"{record.relative_to(ROOT)} code_dir is not normalized: {code_dir}"
+                    )
         if record.stat().st_size > 12 * 1024:
             warnings.append(f"large experiment card should be compacted: {record.relative_to(ROOT)}")
     for path in MEMORY.rglob("*"):
@@ -475,6 +533,8 @@ def build_parser() -> argparse.ArgumentParser:
     start.add_argument("--title", required=True)
     start.add_argument("--hypothesis", required=True)
     start.add_argument("--scope", required=True)
+    start.add_argument("--code-mode", required=True, choices=("reuse", "new"))
+    start.add_argument("--code-dir", required=True, help="repository-relative directory below experiments/")
     start.set_defaults(func=command_start)
 
     run = subparsers.add_parser("run", help="run a command with bounded output capture")

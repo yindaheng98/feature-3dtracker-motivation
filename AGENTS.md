@@ -16,6 +16,15 @@ the user did not explicitly ask for memory to be saved.
   `Look-Around-and-Pay-Attention-LAPA-/` are independent Git submodules. Treat
   each as a separate repository when checking status, commits, diffs, and
   rollback scope.
+- `harness/` contains only Harness infrastructure: instructions, tools,
+  templates, dependency guidance, and durable memory. Do not put
+  experiment-specific runnable code, notebooks, configurations, or one-off
+  analysis scripts there.
+- `experiments/` is the workspace for experiment-specific code written for this
+  project, including reusable experiment modules, launch/evaluation scripts,
+  and experiment-only configurations. Organize it by coherent experiment or
+  experiment family rather than forcing directory names to match Harness
+  record IDs. Generated run artifacts still belong under `output/harness-runs/`.
 - `.venv` is the sole Python environment for this repository. Use explicit
   commands such as `.venv/bin/python` and `.venv/bin/python -m pip`; do not
   assume activation and never create Conda, venv, uv, Poetry, or per-submodule
@@ -125,20 +134,29 @@ stale duplicates, and run:
 
 Before executing a meaningful experiment:
 
-1. Define the hypothesis, baseline or comparison, target dataset, affected
+1. Make and record an experiment-code placement decision. Either reuse an
+   existing directory below `experiments/` when its purpose and interfaces fit,
+   or create a new directory when reuse would introduce awkward coupling,
+   special cases, or unclear rollback ownership. Record the primary directory,
+   rationale, and every script/component actually used. Harness experiment
+   records and code have a many-to-many relationship: one run may use several
+   scripts, and one script or directory may support several runs.
+2. Define the hypothesis, baseline or comparison, target dataset, affected
    repositories, exact acceptance metrics, and a bounded first run.
-2. Record Git repository, branch, commit, dirty paths, and the paths the attempt
+3. Record Git repository, branch, commit, dirty paths, and the paths the attempt
    is allowed to modify. Root status alone is insufficient for submodules.
-3. Start a record with `harness/tools/experiment.py start`. Put detailed notes in
-   the generated experiment file and raw artifacts under the printed output path.
-4. Prefer a cheap smoke test before a full GPU or long-running experiment. Set a
+4. Start a record with `harness/tools/experiment.py start`, passing
+   `--code-mode reuse|new` and `--code-dir experiments/<name>`. Put detailed
+   notes in the generated experiment file and raw artifacts under the printed
+   output path.
+5. Prefer a cheap smoke test before a full GPU or long-running experiment. Set a
    timeout when practical. Never automatically repeat an OOM or an unchanged
    expensive failure.
-5. Run commands through `harness/tools/experiment.py run` when possible so full
+6. Run commands through `harness/tools/experiment.py run` when possible so full
    output goes to a log and only a bounded tail enters the conversation.
-6. Compare results with the stated acceptance criteria. Separate observed facts
+7. Compare results with the stated acceptance criteria. Separate observed facts
    from interpretations.
-7. Finish the record as `successful`, `failed`, `inconclusive`, or `aborted` and
+8. Finish the record as `successful`, `failed`, `inconclusive`, or `aborted` and
    update the relevant category and hot indexes before reporting to the user.
 
 ### Mandatory rollback gate for unsuccessful attempts
@@ -204,6 +222,10 @@ explicitly requests that resource plan.
 ## Code changes and validation
 
 - Make changes only in the repositories and files required by the current idea.
+- Put newly written experiment-only code under `experiments/`, not `harness/`.
+  Modify a submodule only when the requested idea requires changing that
+  project's implementation; do not move reusable Harness mechanics into an
+  experiment directory or experiment logic into the Harness.
 - Inspect local instructions and README files in an affected submodule before
   choosing commands.
 - Use targeted tests first, then the smallest relevant integration or experiment

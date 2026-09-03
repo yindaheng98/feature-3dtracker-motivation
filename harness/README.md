@@ -21,7 +21,9 @@ For an experiment, the agent should use:
 .venv/bin/python harness/tools/experiment.py start \
   --title "short title" \
   --hypothesis "testable claim" \
-  --scope "TrackerSplat"
+  --scope "TrackerSplat" \
+  --code-mode new \
+  --code-dir experiments/tracker_baseline
 
 .venv/bin/python harness/tools/experiment.py run EXP-... \
   --timeout 300 -- <command> <args...>
@@ -35,6 +37,27 @@ For an experiment, the agent should use:
 The run wrapper stores complete stdout/stderr and a JSON manifest under
 `output/harness-runs/<experiment-id>/`. It prints only a bounded tail to the
 agent context. The generated Markdown experiment card is the durable summary.
+
+## Experiment code workspace
+
+`harness/` is reserved for the Harness itself. Put new experiment-specific
+modules, launch/evaluation scripts, notebooks, and configurations under the root
+`experiments/` directory. Keep raw logs, metrics, visualizations, and generated
+checkpoints under `output/harness-runs/<experiment-id>/`, not beside the code.
+
+Before every experiment, choose one placement mode:
+
+- `reuse`: use an existing coherent directory such as
+  `experiments/tracker_baseline/` when its interfaces and purpose fit.
+- `new`: create a new directory below `experiments/` when reuse would add
+  special cases, tight coupling, incompatible assumptions, or ambiguous
+  rollback ownership. The start command creates the selected directory.
+
+Directory names do not need to match Harness experiment IDs. An experiment may
+use several scripts or shared components, and a script may serve several
+experiments. The generated record stores a primary code directory; list every
+additional script/component actually used in its reproducibility section. See
+[`experiments/README.md`](../experiments/README.md) for the workspace policy.
 
 ## Single Python environment
 
