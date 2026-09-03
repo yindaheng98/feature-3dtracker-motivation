@@ -22,7 +22,7 @@ scope: Docker runtime and dependency ownership
 - Image: CUDA devel toolchain, compiler, system shared libraries/executables,
   Python version, and the sole container-side `.venv` populated only by pip
   commands using Harness constraints.
-- Runtime mounts: source repositories, read-only data/checkpoints, writable
+- Runtime mounts: source repositories, read-only `data/` and `checkpoints/`, writable
   output, and optional named download caches.
 - Host injection: GPU devices and compatible driver libraries through NVIDIA
   Container Runtime. Do not manually bind individual driver libraries.

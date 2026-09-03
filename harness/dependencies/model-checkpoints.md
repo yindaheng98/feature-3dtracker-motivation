@@ -2,25 +2,20 @@
 
 This is the durable routing guide for pretrained weights. Check official pages
 again immediately before a download, because model files and access terms can
-change. Do not download weights during read-only investigation; downloads into
-`data/` require explicit user authorization.
+change. Do not download weights during read-only investigation; changes under
+`checkpoints/` require explicit user authorization.
 
 ## Recommended shared layout
 
-Use `data/checkpoints/` as the shared store for newly downloaded or project-split
-weights. It is ignored by the root Git repository, visible inside the Docker data
-overlay, separate from raw experiment output, and can be treated as read-only
-after population.
-
-The existing host TrackerSplat dump is a separate OverlayFS mount: Compose uses
-`/mnt/minorissd4tb/TrackerSplat/checkpoints` as `lowerdir` and project
-`checkpoints/` as writable `upperdir`, matching `data/` and `output/`. Do not
-copy that tree into the repository. TrackerSplat's hard-coded local path can
-point at it with `TrackerSplat/checkpoints -> ../checkpoints` when no path
-already exists.
+Use root `checkpoints/` as the shared store for all projects. It is ignored by
+the root Git repository and exposed through a dedicated Docker OverlayFS whose
+lower layer is the existing host TrackerSplat dump. Keep TrackerSplat's existing
+flat filenames at the root and put other projects and caches in named
+subdirectories. Treat populated weights as read-only inputs.
 
 ```text
-data/checkpoints/
+checkpoints/
+  *.pth, *.pt, *.npz           # existing flat TrackerSplat weight dump
   huggingface/                 # HF_HOME; SpaTrackerV2 and DINOv2 snapshots
   torch/                       # TORCH_HOME; Torch Hub repositories/weights
   Open-d4rt/checkpoints/
@@ -31,13 +26,12 @@ data/checkpoints/
     tapvid3d/lapa.pt
     pointodyssey/lapa.pt
     joint/lapa.pt
-  TrackerSplat/                # flat names expected by its default loaders
 ```
 
 From the root, use these variables for commands that may access model hubs:
 
 ```bash
-export MODEL_ROOT="$PWD/data/checkpoints"
+export MODEL_ROOT="$PWD/checkpoints"
 export HF_HOME="$MODEL_ROOT/huggingface"
 export TORCH_HOME="$MODEL_ROOT/torch"
 ```
@@ -45,6 +39,14 @@ export TORCH_HOME="$MODEL_ROOT/torch"
 The home directory is read-only in the project container, so never rely on the
 default `~/.cache/huggingface` or `~/.cache/torch`. After all required snapshots
 exist, `HF_HUB_OFFLINE=1` can prevent accidental network access during runs.
+
+## Current inventory (bounded check on 2026-09-03)
+
+- TrackerSplat: all 14 filenames published in its README are present and
+  non-empty, including default/optional DOT, direct CoTracker3, DUSt3R, MASt3R,
+  and Depth-Anything-V2 weights. File contents have not yet been deserialized.
+- Not found: Open-d4rt `opend4rt.ckpt`/`model.yaml`, MV-TAP `MVTAP.ckpt`, any
+  LAPA `lapa.pt`, or SpaTrackerV2 Hugging Face snapshot directories.
 
 ## SpaTrackerV2
 
@@ -58,7 +60,8 @@ exist, `HF_HUB_OFFLINE=1` can prevent accidental network access during runs.
 
 The front model is always loaded. Select Offline or Online with `--track_mode`.
 With `HF_HOME` set, the existing code downloads once and reuses the shared
-cache; no code/path override is needed.
+cache; no code/path override is needed. The main `inference.py` hard-codes the
+repository IDs and does not expose a local-path command-line option.
 
 ```bash
 HF_HOME="$HF_HOME" .venv/bin/hf download Yuxihenry/SpatialTrackerV2_Front
@@ -67,7 +70,7 @@ HF_HOME="$HF_HOME" .venv/bin/hf download Yuxihenry/SpatialTrackerV2-Offline
 HF_HOME="$HF_HOME" .venv/bin/hf download Yuxihenry/SpatialTrackerV2-Online
 
 cd SpaTrackerV2
-HF_HOME="../data/checkpoints/huggingface" \
+HF_HOME="../checkpoints/huggingface" \
   ../.venv/bin/python inference.py --track_mode offline <bounded input args>
 ```
 
@@ -100,7 +103,7 @@ Load it through explicit paths:
 
 ```bash
 cd Open-d4rt
-EXP="../data/checkpoints/Open-d4rt/checkpoints/OpenD4RT_32CLIP_9Dataset_NoAUG"
+EXP="../checkpoints/Open-d4rt/checkpoints/OpenD4RT_32CLIP_9Dataset_NoAUG"
 ../.venv/bin/python eval_track3d_in_worldtrack.py \
   --model-config "$EXP/model.yaml" \
   --ckpt-path "$EXP/opend4rt.ckpt" \
@@ -131,7 +134,7 @@ mkdir -p "$MODEL_ROOT/MV-TAP"
 
 cd MV-TAP
 ../.venv/bin/python experiment.py \
-  mode=eval ckpt_path="../data/checkpoints/MV-TAP/MVTAP.ckpt"
+  mode=eval ckpt_path="../checkpoints/MV-TAP/MVTAP.ckpt"
 ```
 
 Lightning receives the path through `ckpt_path` and restores it in
@@ -163,7 +166,7 @@ when reproducing that benchmark.
 
 cd Look-Around-and-Pay-Attention-LAPA-
 ../.venv/bin/python inference_lapa.py \
-  --checkpoint "../data/checkpoints/LAPA/joint/lapa.pt" \
+  --checkpoint "../checkpoints/LAPA/joint/lapa.pt" \
   <scene/feature/output args>
 ```
 
@@ -171,7 +174,9 @@ The loader expects `torch.load(path)["model"]`. Feature precomputation also
 downloads `facebook/dinov2-base` through Hugging Face; `--use_cotracker` invokes
 Torch Hub's `facebookresearch/co-tracker` `cotracker3_offline`. Set both
 `HF_HOME` and `TORCH_HOME` during preprocessing. Inference reads the generated
-HDF5 feature cache and does not fetch those backbones itself.
+HDF5 feature cache and does not fetch those backbones itself. The existing flat
+`dinov2_vitb14_pretrain.pth` is not a complete Transformers snapshot, so it does
+not replace `facebook/dinov2-base` for this code path.
 
 Official sources:
 
@@ -194,21 +199,21 @@ cvo_raft_patch_8.pth
 movi_f_raft_patch_4_alpha.pth
 ```
 
-A bounded filename check on 2026-09-03 found none of these three files in the
-existing host TrackerSplat checkpoint dump, so the minimal DOT set still needs
-to be downloaded.
+A bounded filename and size check on 2026-09-03 found all TrackerSplat files
+listed by its README: the three default DOT files, all published DOT
+alternatives, direct CoTracker3, three DUSt3R models, MASt3R, and all three
+Depth-Anything-V2 sizes. No additional TrackerSplat weight is currently needed.
 
 Download from the official DOT Hugging Face repository:
 
 ```bash
-mkdir -p "$MODEL_ROOT/TrackerSplat"
 for file in \
   movi_f_cotracker2_patch_4_wind_8.pth \
   cvo_raft_patch_8.pth \
   movi_f_raft_patch_4_alpha.pth
 do
   .venv/bin/hf download 16lemoing/dot "$file" \
-    --local-dir "$MODEL_ROOT/TrackerSplat"
+    --local-dir "$MODEL_ROOT"
 done
 ```
 
@@ -220,21 +225,12 @@ test ! -e TrackerSplat/checkpoints
 ln -s ../checkpoints TrackerSplat/checkpoints
 ```
 
-If using only newly downloaded files under `data/checkpoints/TrackerSplat`,
-create this ignored compatibility link instead (only when no path already
-exists):
-
-```bash
-test ! -e TrackerSplat/checkpoints
-ln -s ../data/checkpoints/TrackerSplat TrackerSplat/checkpoints
-```
-
 or pass explicit values through repeatable `-o/--option_estimation` options:
 
 ```bash
--o "tracker_path='../data/checkpoints/TrackerSplat/movi_f_cotracker2_patch_4_wind_8.pth'" \
--o "estimator_path='../data/checkpoints/TrackerSplat/cvo_raft_patch_8.pth'" \
--o "refiner_path='../data/checkpoints/TrackerSplat/movi_f_raft_patch_4_alpha.pth'"
+-o "tracker_path='../checkpoints/movi_f_cotracker2_patch_4_wind_8.pth'" \
+-o "estimator_path='../checkpoints/cvo_raft_patch_8.pth'" \
+-o "refiner_path='../checkpoints/movi_f_raft_patch_4_alpha.pth'"
 ```
 
 Optional alternatives, not needed for the default first run:
@@ -261,7 +257,7 @@ Official sources:
 ## Download and integrity policy
 
 1. Download only the variant needed by the next bounded experiment.
-2. Keep partial downloads and hub caches under `data/checkpoints/`, never in
+2. Keep partial downloads and hub caches under root `checkpoints/`, never in
    submodule source trees or `output/harness-runs/`.
 3. Record source repository, revision, local relative path, byte size, and
    SHA-256 in a manifest after download. Never trust filename alone.

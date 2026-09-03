@@ -39,9 +39,11 @@ the user did not explicitly ask for memory to be saved.
   prerequisite.
 - `data/` is a very large input tree (about 1.3 TB). Treat it as read-only unless
   the user explicitly requests a data change.
-- `checkpoints/` is a large pretrained-weight overlay (about 86 GB from the host
-  TrackerSplat dump). Treat it as read-only unless the user explicitly requests a
-  checkpoint change.
+- `checkpoints/` is the single shared root for all pretrained models and model
+  caches. It is a large overlay (about 86 GB from the host TrackerSplat dump).
+  Keep Hugging Face and Torch Hub caches under `checkpoints/huggingface/` and
+  `checkpoints/torch/`. Treat the model root as read-only unless the user
+  explicitly requests a checkpoint change.
 - `output/` is a very large generated-results tree (about 1.5 TB). New raw logs,
   metrics, checkpoints, visualizations, and manifests belong under
   `output/harness-runs/<experiment-id>/`.
@@ -85,6 +87,12 @@ one of these events occurs:
 
 Do not save greetings, routine progress, untested speculation, raw chain of
 thought, duplicate facts, or full conversation history.
+
+Canonical memory describes the current project state. When a path, idea,
+decision, or instruction is fully abandoned and no surviving code, artifact,
+result, or active decision depends on that history, delete the obsolete record
+and all of its references. Retain supersession history only when it is necessary
+to interpret something that still exists in the project.
 
 Memory layers:
 
