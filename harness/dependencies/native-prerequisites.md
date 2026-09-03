@@ -26,7 +26,7 @@ logs.
 | `CUDA_HOME ... not set`, missing `gcc`/`g++`/`nvcc`, or extension compile failure before compilation | Native build toolchain | Use an already-built extension when its kernel passes. Do not substitute the PyPI `nvidia-cuda-nvcc-cu12` package for a real compiler. | User supplies a matching CUDA development toolkit/compiler in the host or image; Agent may build afterward if explicitly authorized. |
 | Missing `libGL.so.1`, `ffmpeg`, `ffprobe`, `colmap`, or another system command/library | System/image dependency | Report the exact missing name and a bounded post-install validation command. Do not create a second Python environment as a workaround. | User installs it durably in the host/image or authorizes a Dockerfile change and rebuild. |
 | CUDA driver/device unavailable or incompatible with the runtime | GPU host boundary | Collect `torch.cuda`/driver evidence without replacing PyTorch. | User fixes the host driver, NVIDIA Container Runtime, GPU exposure, or image compatibility. |
-| Home cache is read-only | Runtime path/permissions | Redirect caches to the experiment's unique directory under `output/harness-runs/<id>/`. | Agent can resolve per run; user changes global ownership only if desired. |
+| Home cache is read-only | Runtime path/permissions | Redirect caches to a writable task-specific directory under `output/`. | Agent can resolve per run; user changes global ownership only if desired. |
 | Missing datasets, checkpoints, credentials, licenses, or private access | External input/access | Identify the exact expected path/artifact and stop before downloading unless authorized. | User supplies or authorizes access/download. |
 
 When escalating, tell the user: the missing component, direct evidence, why pip
@@ -104,8 +104,8 @@ or restore only the attempt-owned package changes and verify the prior state.
 - For Taichi on a read-only home directory, use a unique writable cache:
 
   ```bash
-  mkdir -p output/harness-runs/<experiment-id>/taichi-cache
-  TI_OFFLINE_CACHE_FILE_PATH="$PWD/output/harness-runs/<experiment-id>/taichi-cache" \
+  mkdir -p output/<chosen-path>/taichi-cache
+  TI_OFFLINE_CACHE_FILE_PATH="$PWD/output/<chosen-path>/taichi-cache" \
     .venv/bin/python <command>
   ```
 

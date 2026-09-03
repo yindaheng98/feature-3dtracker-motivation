@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T03:22:57Z
+Updated: 2026-09-03T05:32:20Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -16,24 +16,22 @@ across the five submodules while keeping evidence reproducible and context small
 
 | ID | Scope | Status | One-line state | Detail |
 | --- | --- | --- | --- | --- |
-| HARNESS-001 | repository root | ready | Memory, bounded run capture, failure rollback, context delegation, and the user-facing setup/run guide are installed and self-checked | [Harness README](../README.md) |
+| HARNESS-001 | repository root | ready | Memory, failure rollback, context delegation, and flexible experiment-code guidance adapt to each actual experiment | [Harness README](../README.md) |
 
-## Recent experiments
+## Recent reusable experiment findings
 
-<!-- experiment-rows:start -->
-| ID | Date | Status | Scope | Headline | Detail |
-| --- | --- | --- | --- | --- | --- |
-| — | 2026-09-02 | consolidated | shared environment and five-project smoke validation | Five setup/compatibility experiments were consolidated into the environment ownership and troubleshooting guide; raw run artifacts remain under `output/harness-runs/`. | [environment guide](../dependencies/native-prerequisites.md) |
-<!-- experiment-rows:end -->
+| Date/topic | Reusable conclusion | Detail |
+| --- | --- | --- |
+| 2026-09-02 · shared environment and five-project smoke validation | Earlier setup checks were consolidated into the environment ownership and troubleshooting guide. | [environment guide](../dependencies/native-prerequisites.md) |
 
-Keep at most 12 closed experiments here. The full directory is in
+Keep at most 12 recent routes here. The full directory is in
 [experiments/INDEX.md](experiments/INDEX.md).
 
 ## Active decisions
 
 | ID | Decision | Detail |
 | --- | --- | --- |
-| DEC-HARNESS-001 | Raw logs and artifacts live in `output/harness-runs/`; durable memory stores only compact summaries and relative evidence paths. | [decisions index](decisions/INDEX.md) |
+| DEC-HARNESS-001 | Raw artifacts use a task-appropriate layout under `output/`; durable memory stores only compact summaries and relative evidence paths. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-002 | The main agent is the only canonical memory-index writer; subagents are bounded read-only context filters. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-003 | Any attempt that misses the user's acceptance criteria must restore attempt-owned code before exit; an unverified rollback blocks later code attempts. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-004 | The root `.venv` is the only Python environment; dependency changes use explicit pip commands plus protected-stack constraints, never direct environment-file edits. | [decisions index](decisions/INDEX.md) |
@@ -41,7 +39,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | DEC-HARNESS-006 | Agent owns authorized Python/wheel repairs; the user/host owns durable system, toolchain, driver, container-ABI, input, and access prerequisites. | [environment guide](../dependencies/native-prerequisites.md) |
 | DEC-HARNESS-008 | Use root `checkpoints/` with acquisition-based routing: shared standard Hugging Face/Torch caches and flat standalone files. | [decision card](decisions/DEC-HARNESS-008.md) |
 | DEC-HARNESS-009 | Delete fully abandoned Harness content and all references when no surviving project state requires its history. | [decisions index](decisions/INDEX.md) |
-| DEC-HARNESS-010 | Keep Harness infrastructure in `harness/`; organize experiment-specific code flexibly under `experiments/` and record a reuse/new placement decision for every experiment. | [decision card](decisions/DEC-HARNESS-010.md) |
+| DEC-HARNESS-010 | Keep Harness infrastructure in `harness/`; organize experiment code flexibly under `experiments/` using the simplest practical layout. | [decision card](decisions/DEC-HARNESS-010.md) |
 
 ## Knowledge routes
 
@@ -53,7 +51,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124. The runtime can execute the built TrackerSplat CUDA extensions but still has no `gcc`/`nvcc` for rebuilds. | [code index](code/INDEX.md) |
 | Environment troubleshooting | Diagnose Python, wheel ABI, native toolchain, system/image, GPU, permissions, and external inputs separately; route each layer to Agent or user ownership. | [environment guide](../dependencies/native-prerequisites.md) |
 | Model checkpoints | The normalized root contains load-validated Spa Front+Offline, Open-d4rt 32-frame, LAPA Joint, and DINOv2 in the HF cache, plus flat MV-TAP/TrackerSplat files. | [checkpoint guide](../dependencies/model-checkpoints.md) |
-| Experiment code | Experiment code lives under flexible experiment/family directories in `experiments/`; records and scripts are many-to-many, with an explicit reuse/new choice at experiment start. | [workspace policy](../../experiments/README.md) |
+| Experiment code | Experiment code lives under flexibly organized `experiments/`; reuse or isolate it according to the simplest practical implementation, and keep records/scripts many-to-many. | [workspace policy](../../experiments/README.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
 | Data | `data/`, `output/`, and `checkpoints/` are large overlay trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 

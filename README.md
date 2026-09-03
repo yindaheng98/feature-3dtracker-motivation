@@ -98,8 +98,8 @@ test "$(stat -c %d checkpoints)" = "$(stat -c %d .overlay-work/checkpoints)"
 sudo docker compose config >/dev/null
 ```
 
-Harness 将 `data/` 和 `checkpoints/` 视为只读输入。新日志、指标、checkpoint 和可视化统一写到
-`output/harness-runs/<experiment-id>/`，不要让测试脚本覆盖共享结果。
+Harness 将 `data/` 和 `checkpoints/` 视为只读输入。新日志、指标、checkpoint 和可视化应写到
+`output/` 下根据实际实验选择的目录；不预设日志格式或固定 run 结构，也不要覆盖共享结果。
 
 ## 4. 安装并登录 Codex
 
@@ -260,7 +260,6 @@ ffprobe -version
 colmap -h
 
 .venv/bin/python -m pip check
-.venv/bin/python harness/tools/experiment.py check
 ```
 
 当前 `pip check` 可能只报告：
@@ -299,13 +298,14 @@ codex -a never -s danger-full-access
 
 - 每轮只预读 `harness/memory/ACTIVE.md` 和 `harness/memory/INDEX.md`。
 - 具体想法、实验、结论、失败模式和用户决策会自动提炼为简短记忆。
-- 完整日志与产物写入 `output/harness-runs/<experiment-id>/`。
+- 大型日志与产物写入 `output/` 下按实际实验选择的位置和格式，主对话只读取必要部分。
 - 长日志、跨项目代码和大量历史由只读 subagent 摘要，避免主 Agent context 膨胀。
 - 未达到用户目标的代码尝试必须回退 attempt-owned 修改并核对各 submodule；无法安全
-  回退时会标记 `rollback_pending`，阻止后续尝试继续建立在失败状态上。
+  回退时会在 `ACTIVE.md` 写明具体未恢复路径，阻止后续尝试继续建立在失败状态上。
 
-Harness 的命令和目录结构见 [`harness/README.md`](harness/README.md)。通常直接描述
-目标即可，例如：“在一个小样本上比较两个 tracking 想法，记录指标，失败时回退”。
+Harness 的原则和目录结构见 [`harness/README.md`](harness/README.md)。具体运行、结果
+组织和记录方式根据实际任务决定；通常直接描述目标即可，例如：“在一个小样本上比较
+两个 tracking 想法，记录指标，失败时回退”。
 
 ## 11. Overlay volume 维护
 

@@ -10,14 +10,13 @@ video assembly.
 
 Avoid batch shell scripts for initial harness experiments. Prefer a targeted
 Python invocation from `TrackerSplat/` for one sequence, a few frames, low batch
-size/iteration counts, an explicit pipeline, and a unique destination under
-`../output/harness-runs/<experiment-id>/`.
+size/iteration counts, an explicit pipeline, and a suitable writable destination.
 
 The relevant module is typically:
 
 ```bash
-mkdir -p ../output/harness-runs/<experiment-id>/taichi-cache
-TI_OFFLINE_CACHE_FILE_PATH=../output/harness-runs/<experiment-id>/taichi-cache \
+mkdir -p <writable-cache-dir>
+TI_OFFLINE_CACHE_FILE_PATH=<writable-cache-dir> \
   ../.venv/bin/python -m trackersplat.motionestimation <explicit bounded args>
 ```
 

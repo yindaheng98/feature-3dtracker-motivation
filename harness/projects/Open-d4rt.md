@@ -13,7 +13,7 @@ PATH="../.venv/bin:$PATH" \
 LIMIT_SEQS=1 \
 SUBSETS=adt_mini \
 QUERY_CHUNK_SIZE=1024 \
-OUTPUT_DIR=../output/harness-runs/<experiment-id>/worldtrack \
+OUTPUT_DIR=<explicit-output-path> \
 bash run_eval_worldtrack.sh
 ```
 
@@ -32,4 +32,3 @@ experiment is specifically diagnosing memory use.
   preflight failure, not a reason to auto-download.
 - Never reuse a shared result directory when scripts can overwrite summary or
   per-sequence JSON files.
-

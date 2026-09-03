@@ -24,7 +24,8 @@ the user did not explicitly ask for memory to be saved.
   project, including reusable experiment modules, launch/evaluation scripts,
   and experiment-only configurations. Organize it by coherent experiment or
   experiment family rather than forcing directory names to match Harness
-  record IDs. Generated run artifacts still belong under `output/harness-runs/`.
+  records. Place generated artifacts under `output/` in the layout best suited
+  to the current experiment.
 - `.venv` is the sole Python environment for this repository. Use explicit
   commands such as `.venv/bin/python` and `.venv/bin/python -m pip`; do not
   assume activation and never create Conda, venv, uv, Poetry, or per-submodule
@@ -55,9 +56,10 @@ the user did not explicitly ask for memory to be saved.
   files obtained elsewhere stay flat at the checkpoint root unless their loader
   requires another layout. Treat the model root as read-only unless the user
   explicitly requests a checkpoint change.
-- `output/` is a very large generated-results tree (about 1.5 TB). New raw logs,
-  metrics, checkpoints, visualizations, and manifests belong under
-  `output/harness-runs/<experiment-id>/`.
+- `output/` is a very large generated-results tree (about 1.5 TB). Put new raw
+  logs, metrics, checkpoints, and visualizations in a task-appropriate writable
+  location under `output/`. Choose the layout and file formats from the actual
+  experiment instead of imposing a Harness run schema.
 - Durable summaries belong under `harness/memory/`; never copy raw logs, large
   arrays, full diffs, images, videos, point clouds, or checkpoints into memory.
 - Do not modify the user's existing root `README.md` changes unless asked.
@@ -89,7 +91,7 @@ Store evidence, not transcripts. Save a memory without waiting to be asked when
 one of these events occurs:
 
 - an idea becomes specific enough to test;
-- an experiment is started, succeeds, fails, or is inconclusive;
+- an experiment is attempted or produces evidence worth retaining;
 - a measured result changes the current conclusion;
 - a reusable command, dataset constraint, environment fact, or failure mode is
   discovered;
@@ -116,48 +118,47 @@ Memory layers:
   detail file focused; split it when it exceeds about 400 lines.
 - `harness/memory/archive/`: older indexes or superseded syntheses. The hot index
   retains a link and stable keywords, not the old details.
-- `output/harness-runs/<id>/`: raw run manifests, logs, metrics, and artifacts.
+- `output/`: raw experiment outputs in a task-appropriate layout; memory links
+  to selected evidence rather than prescribing its format.
 
 The main agent is the only canonical memory and index writer. Subagents may
 inspect evidence and return a fixed-format summary. If a result is too long for
 the return message, a subagent may create one uniquely named candidate under
 `harness/memory/inbox/<session-or-task>/`; it must not edit canonical details,
 `harness/memory/INDEX.md`, or category indexes. Before the final response, the
-main agent must review and merge useful candidates, update record status, remove
-stale duplicates, and run:
-
-```bash
-.venv/bin/python harness/tools/experiment.py check
-```
+main agent must review and merge useful candidates, update the relevant memory,
+remove stale duplicates, and check index size, links, and consistency with
+bounded read-only commands. There is no mandatory Harness validation utility.
 
 ## Experiment lifecycle
 
-Before executing a meaningful experiment:
+When executing a meaningful experiment:
 
-1. Make and record an experiment-code placement decision. Either reuse an
-   existing directory below `experiments/` when its purpose and interfaces fit,
-   or create a new directory when reuse would introduce awkward coupling,
-   special cases, or unclear rollback ownership. Record the primary directory,
-   rationale, and every script/component actually used. Harness experiment
+1. Choose the simplest code arrangement that fits the experiment. Reuse an
+   existing directory below `experiments/` when that is natural, or create a new
+   directory when it keeps the code clearer. Let the actual work determine the
+   directory structure, names, entry points, and reuse boundaries. Harness
    records and code have a many-to-many relationship: one run may use several
    scripts, and one script or directory may support several runs.
-2. Define the hypothesis, baseline or comparison, target dataset, affected
-   repositories, exact acceptance metrics, and a bounded first run.
+2. Inspect the real entry points, inputs, risks, and existing code. Define only
+   the controls, comparisons, and acceptance evidence needed for this task.
 3. Record Git repository, branch, commit, dirty paths, and the paths the attempt
    is allowed to modify. Root status alone is insufficient for submodules.
-4. Start a record with `harness/tools/experiment.py start`, passing
-   `--code-mode reuse|new` and `--code-dir experiments/<name>`. Put detailed
-   notes in the generated experiment file and raw artifacts under the printed
-   output path.
+4. Run the simplest direct commands that fit the experiment. Decide its output
+   paths, logging, metrics, artifact formats, and progress description from the
+   code and user goal. Keep large raw evidence under `output/` and only concise
+   conclusions and evidence paths in memory.
 5. Prefer a cheap smoke test before a full GPU or long-running experiment. Set a
    timeout when practical. Never automatically repeat an OOM or an unchanged
    expensive failure.
-6. Run commands through `harness/tools/experiment.py run` when possible so full
-   output goes to a log and only a bounded tail enters the conversation.
+6. If output is large, keep it out of the main context and inspect it with
+   bounded tails, targeted searches, sampling, or a read-only subagent chosen for
+   that specific output.
 7. Compare results with the stated acceptance criteria. Separate observed facts
    from interpretations.
-8. Finish the record as `successful`, `failed`, `inconclusive`, or `aborted` and
-   update the relevant category and hot indexes before reporting to the user.
+8. Save a concise, free-form memory only when the outcome is durable. Describe
+   what was tried, the evidence, the conclusion, relevant code paths, and useful
+   next action using the form that best communicates the actual result.
 
 ### Mandatory rollback gate for unsuccessful attempts
 
@@ -177,15 +178,15 @@ Before ending the turn for an unsuccessful attempt:
 4. Re-check `git status --short` in the root and every affected submodule. Compare
    it with the recorded baseline and verify that no attempt-owned dirty path or
    submodule pointer remains.
-5. Record the attempt as `failed`, `inconclusive`, or `aborted` with
-   `rollback: restored`, including the failure evidence and a reusable lesson.
+5. Record the failure evidence, reusable lesson, and whether restoration was
+   verified in a concise form suited to the attempt.
 
 Rollback verification is part of completion, not an optional cleanup step. If
 ownership cannot be isolated or restoration cannot be verified safely, do not
-pretend cleanup succeeded. Mark `rollback_pending` in `ACTIVE.md` and the
-experiment detail, identify the exact unresolved paths, report the blocker, and
-do not start another code attempt until it is resolved. A crash or OOM may
-prevent cleanup; this is why startup audits the active record.
+pretend cleanup succeeded. Put a concise warning with the exact unresolved paths
+in `ACTIVE.md`, report the blocker, and do not start another code attempt until
+it is resolved. A crash or OOM may prevent cleanup; this is why startup audits
+the active note.
 
 ## Context delegation
 
@@ -242,10 +243,10 @@ explicitly requests that resource plan.
 
 ## Final response
 
-Lead with the outcome. Include changed repositories/files, experiment status and
-headline evidence, validation performed, rollback state if relevant, and the
-next useful action. Do not paste full logs or long diffs; link their relative
-paths and the durable memory record instead.
+Lead with the outcome. Include changed repositories/files, experiment outcome
+and headline evidence when applicable, validation performed, rollback state if
+relevant, and the next useful action. Do not paste full logs or long diffs; link
+their relative paths and the durable memory record instead.
 
 For any unsuccessful attempt, the final response must say either that rollback
 was verified against the recorded baseline or that rollback is still pending and

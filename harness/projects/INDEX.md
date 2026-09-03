@@ -43,4 +43,4 @@ is launched.
 
 Root `data/` and `output/` are mainly TrackerSplat-oriented and are not implicitly
 mapped to every submodule's expected relative paths. Pass explicit paths and use
-a unique `output/harness-runs/<experiment-id>/` directory.
+a task-appropriate writable destination that will not overwrite shared results.

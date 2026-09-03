@@ -8,8 +8,9 @@
 | `TrackerSplat/` | Tracking-driven dynamic Gaussian reconstruction | Batch scripts contain destructive/overwriting steps; use targeted Python entrypoints for smoke tests. | [TrackerSplat](../../projects/TrackerSplat.md) |
 | `Look-Around-and-Pay-Attention-LAPA-/` | Multi-camera transformer point tracking | Real runs require checkpoint, MC metadata, HDF5 features, and track NPZ; keep synthetic and real-data validation separate. | [LAPA](../../projects/LAPA.md) |
 
-Per-experiment cards record exact commit, branch, dirty paths, changed symbols,
-and diff stats. Never place full diffs in this index.
+When useful for reproducing a result, its compact memory records the relevant
+commit, branch, dirty paths, changed symbols, and diff stats. Never place full
+diffs in this index.
 
 ## Host build facts
 

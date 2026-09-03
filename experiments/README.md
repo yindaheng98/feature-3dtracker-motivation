@@ -2,7 +2,7 @@
 
 This directory contains code written specifically to design, launch, evaluate,
 or analyze project experiments. Harness implementation and durable records stay
-under `harness/`; raw outputs stay under `output/harness-runs/`.
+under `harness/`; raw outputs stay in a task-appropriate location under `output/`.
 
 ## Organization
 
@@ -19,20 +19,20 @@ relationship:
 A local README describing purpose, entry points, inputs, and shared assumptions
 is recommended once a directory contains more than a trivial script.
 
-## Placement decision for each experiment
+## Placement for each experiment
 
-Before starting an experiment, choose and record exactly one mode:
+Use the simplest arrangement that fits the current work:
 
 - Reuse an existing directory when the new test shares its purpose, interfaces,
   dependencies, and artifact conventions, and changes remain easy to attribute
   and roll back.
 - Create a new directory when assumptions or interfaces are incompatible, reuse
-  would require unrelated flags or special cases, the code has a distinct
-  lifecycle, or attempt-owned changes could not be isolated safely.
+  would require unrelated flags or special cases, or isolation makes the code
+  easier to understand and roll back.
 
-Pass that decision to `harness/tools/experiment.py start` through `--code-mode`
-and `--code-dir`. In the generated experiment record, list every script and
-component actually used, including code outside the primary directory.
+Use judgment based on the current code and task. Harness records and code remain
+many-to-many. When useful for reproduction, list the actual scripts and entry
+points in memory.
 
 ## Boundaries
 
@@ -45,5 +45,5 @@ component actually used, including code outside the primary directory.
 - Use `.venv/bin/python` explicitly. Do not create another environment.
 - Treat `data/` and `checkpoints/` as read-only unless the user authorizes a
   change.
-- Store logs, metrics, generated checkpoints, media, and manifests in the
-  experiment's unique `output/harness-runs/<experiment-id>/` directory.
+- Store logs, metrics, generated checkpoints, and media under `output/` using
+  whatever layout and formats fit the actual experiment.

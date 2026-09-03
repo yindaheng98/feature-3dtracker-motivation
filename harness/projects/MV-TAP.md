@@ -14,7 +14,7 @@ Run evaluation from `MV-TAP/` with explicit inputs and output:
   mode=eval \
   ckpt_path=<checkpoint> \
   datasets.data_root=<explicit-data-root> \
-  experiment_path=../output/harness-runs/<experiment-id>
+  experiment_path=<explicit-output-path>
 ```
 
 View-sampling helpers are under `scripts/sample_*_views.py`.
@@ -30,4 +30,3 @@ View-sampling helpers are under `scripts/sample_*_views.py`.
 - Avoid W&B or other network side effects unless requested.
 - The documented Python/PyTorch versions differ from the root environment;
   preflight imports before running.
-

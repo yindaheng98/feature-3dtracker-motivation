@@ -13,8 +13,7 @@ supersedes: []
 Future work will create experiment-specific launchers, adapters, evaluations,
 configurations, and reusable research utilities. Keeping those files inside the
 Harness would mix project experiments with the system that records and governs
-them. Requiring one code directory per record would also duplicate useful code
-and misrepresent experiments that compose several scripts.
+them. Experiment code may naturally be shared or composed across several tests.
 
 ## Decision
 
@@ -23,10 +22,9 @@ guidance, and durable memory. Put newly written experiment-specific code under
 root `experiments/`, organized by a coherent individual experiment or family.
 
 At the start of every meaningful experiment, explicitly choose either to reuse
-an existing directory or create a new one, and record the primary directory,
-placement rationale, and all scripts/components used. Experiment records and
-experiment code are many-to-many; neither folder names nor script names need to
-match Harness experiment IDs.
+an existing directory or create a new one according to whichever produces the
+simplest clear implementation. Experiment memory and experiment code are
+many-to-many; folder and script names follow the needs of the code.
 
 ## Evidence
 
@@ -37,22 +35,13 @@ match Harness experiment IDs.
 - A single experiment may compose several scripts, and one reusable script may
   support several experiment records.
 
-## Alternatives considered
-
-- One directory per Harness experiment ID was rejected because it would force
-  duplication and prevent natural reuse.
-- Storing runnable experiment code in `harness/` was rejected because it blurs
-  infrastructure and research-code ownership.
-
 ## Consequences
 
-- `harness/tools/experiment.py start` requires `--code-mode reuse|new` and a
-  repository-relative `--code-dir` strictly below `experiments/`.
-- `reuse` requires the selected directory to exist; `new` requires it not to
-  exist and creates it.
-- Generated experiment cards capture the primary directory and provide fields
-  for the complete script/component list and placement rationale.
-- Raw artifacts remain under `output/harness-runs/<experiment-id>/`.
+- Directory structure, commands, progress descriptions, logs, metrics, and
+  artifact formats are selected from the actual experiment and user goal.
+- Compact experiment memory notes code paths and entry points when useful for
+  reproduction.
+- Raw artifacts use a task-appropriate location and format under `output/`.
 
 ## Revisit trigger
 

@@ -1,13 +1,12 @@
-# Experiment Index
+# Experiment Memory Index
 
-Canonical experiment cards live under `YYYY/MM/EXP-*.md`. The raw run content is
-stored separately under `output/harness-runs/<experiment-id>/`.
+Add compact routes only when an experiment produces reusable evidence. Detail
+file names, content shape, outcome wording, and raw output layout are chosen for
+the actual work.
 
-<!-- experiment-rows:start -->
-| ID | Date | Status | Scope | Hypothesis | Headline | Detail |
-| --- | --- | --- | --- | --- | --- | --- |
-| — | 2026-09-02 | consolidated | environment setup and compatibility | — | Five environment setup/validation cards were replaced by one durable guide after their reusable evidence and decisions were merged. | [environment guide](../../dependencies/native-prerequisites.md) |
-<!-- experiment-rows:end -->
+| Date/topic | Reusable conclusion | Detail |
+| --- | --- | --- |
+| 2026-09-02 · environment setup and compatibility | Earlier setup checks were consolidated after their reusable evidence and decisions were merged. | [environment guide](../../dependencies/native-prerequisites.md) |
 
-When this index grows past 20 KiB, split closed rows into monthly archive indexes
-and retain routes here.
+When this index grows past 20 KiB, move older routes into a topical or monthly
+archive and retain only the useful directory entries here.

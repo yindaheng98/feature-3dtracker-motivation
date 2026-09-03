@@ -1,14 +1,8 @@
----
-schema: harness.active/v1
-experiment_id: null
-status: idle
-updated_at: 2026-09-02T23:53:12Z
-detail: null
-output_dir: null
-rollback: not-needed
----
+# Active Work
 
-# Active Experiment
+There is no unfinished experiment or pending restoration.
 
-No experiment is active. If this file says `running` or `rollback_pending`, audit
-the listed repositories, processes, and paths before starting another attempt.
+When work is interrupted or restoration cannot be verified, replace this text
+with a concise free-form note containing only what the next Agent needs: the
+goal, affected repositories and paths, remaining processes if any, evidence
+location, and exact cleanup still required.
