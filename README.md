@@ -13,7 +13,7 @@ Harness 放在同一个工作目录中，用于对话式代码修改、可复现
 - `Look-Around-and-Pay-Attention-LAPA-/`
 
 Docker 主要用于限制 Codex 能访问的宿主机目录，并提供少量系统工具。代码、唯一的
-`.venv`、Codex CLI、`data/` 和 `output/` 均来自宿主机挂载；不要在各项目内另建
+`.venv`、Codex CLI、`data/`、`output/` 和 `checkpoints/` 均来自宿主机挂载；不要在各项目内另建
 Conda、venv、uv 或 Poetry 环境。
 
 ## 已验证基线
@@ -72,29 +72,33 @@ git submodule status --recursive
 
 ## 3. 配置 OverlayFS 数据目录
 
-`docker-compose.yml` 中下面两个 `lowerdir` 是当前机器的绝对路径：
+`docker-compose.yml` 中下面三个 `lowerdir` 是当前机器的绝对路径：
 
 ```text
 /mnt/minorissd4tb/TrackerSplat/data
 /mnt/minorissd4tb/TrackerSplat/output
+/mnt/minorissd4tb/TrackerSplat/checkpoints
 ```
 
-在其他机器上使用前，必须把它们改成真实存在的只读基础数据/结果目录。项目内
-`data/`、`output/` 是 writable upperdir；`.overlay-work/*` 是 OverlayFS workdir。
-upperdir 与对应 workdir 必须位于同一文件系统，workdir 必须为空。
+在其他机器上使用前，必须把它们改成真实存在的只读基础数据/结果/权重目录。项目内
+`data/`、`output/`、`checkpoints/` 是 writable upperdir；`.overlay-work/*` 是
+OverlayFS workdir。upperdir 与对应 workdir 必须位于同一文件系统，workdir 必须为空。
 
 ```bash
-mkdir -p data output .overlay-work/data .overlay-work/output .codex
+mkdir -p data output checkpoints \
+  .overlay-work/data .overlay-work/output .overlay-work/checkpoints .codex
 
 test -z "$(find .overlay-work/data -mindepth 1 -maxdepth 1 -print -quit)"
 test -z "$(find .overlay-work/output -mindepth 1 -maxdepth 1 -print -quit)"
+test -z "$(find .overlay-work/checkpoints -mindepth 1 -maxdepth 1 -print -quit)"
 test "$(stat -c %d data)" = "$(stat -c %d .overlay-work/data)"
 test "$(stat -c %d output)" = "$(stat -c %d .overlay-work/output)"
+test "$(stat -c %d checkpoints)" = "$(stat -c %d .overlay-work/checkpoints)"
 
 sudo docker compose config >/dev/null
 ```
 
-Harness 将 `data/` 视为只读输入。新日志、指标、checkpoint 和可视化统一写到
+Harness 将 `data/` 和 `checkpoints/` 视为只读输入。新日志、指标、checkpoint 和可视化统一写到
 `output/harness-runs/<experiment-id>/`，不要让测试脚本覆盖共享结果。
 
 ## 4. 安装并登录 Codex
@@ -288,7 +292,7 @@ codex -a never -s danger-full-access
 ```
 
 这意味着 Codex 在容器内无需逐次审批且没有额外文件沙箱；安全边界来自 Docker
-挂载。宿主机 `$HOME` 为只读，仓库、`data/`/`output/` overlay 和网络可访问。
+挂载。宿主机 `$HOME` 为只读，仓库、`data/`/`output/`/`checkpoints/` overlay 和网络可访问。
 
 不需要显式告诉 Agent “保存经验”。从根目录启动后，Codex 会自动读取 `AGENTS.md`
 并执行 Harness 协议：
@@ -314,9 +318,9 @@ sudo docker compose run --rm dev
 ```
 
 `down -v` 是破坏性操作：它会删除该 Compose project 管理的 named volumes。当前
-OverlayFS 配置不会删除作为宿主机 upperdir 的项目内 `data/` 和 `output/`，但执行前
-仍应确认 Compose project 中没有其他需要保留的 named volume，并核对两个
-`lowerdir` 和两个 workdir 的准确路径。
+OverlayFS 配置不会删除作为宿主机 upperdir 的项目内 `data/`、`output/` 和
+`checkpoints/`，但执行前仍应确认 Compose project 中没有其他需要保留的 named
+volume，并核对三个 `lowerdir` 和三个 workdir 的准确路径。
 
 ## 环境问题如何分工
 

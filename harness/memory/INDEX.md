@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T00:13:22Z
+Updated: 2026-09-03T00:49:35Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -39,6 +39,7 @@ Keep at most 12 closed experiments here. The full directory is in
 | DEC-HARNESS-004 | The root `.venv` is the only Python environment; dependency changes use explicit pip commands plus protected-stack constraints, never direct environment-file edits. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-005 | Build TrackerSplat with its documented repository-local `pip install --target . --upgrade --no-deps .` layout, invoked through the root `.venv`. | [decisions index](decisions/INDEX.md) |
 | DEC-HARNESS-006 | Agent owns authorized Python/wheel repairs; the user/host owns durable system, toolchain, driver, container-ABI, input, and access prerequisites. | [environment guide](../dependencies/native-prerequisites.md) |
+| DEC-HARNESS-007 | Overlay the host TrackerSplat weight dump onto root `checkpoints/` with the same OverlayFS pattern as `data/`/`output/`; keep new downloads under `data/checkpoints/`. | [decision card](decisions/DEC-HARNESS-007.md) |
 
 ## Knowledge routes
 
@@ -49,8 +50,9 @@ Keep at most 12 closed experiments here. The full directory is in
 | TrackerSplat historical dependencies | External repos are pinned to their last commits before TrackerSplat HEAD on 2025-11-23; nested CUDA submodules use exact gitlinks. | [pin table](../dependencies/trackersplat-historical-pins.md) |
 | Host CUDA extension builds | RTX A5000 requires SM 8.6; current Torch is 2.6.0+cu124. The runtime can execute the built TrackerSplat CUDA extensions but still has no `gcc`/`nvcc` for rebuilds. | [code index](code/INDEX.md) |
 | Environment troubleshooting | Diagnose Python, wheel ABI, native toolchain, system/image, GPU, permissions, and external inputs separately; route each layer to Agent or user ownership. | [environment guide](../dependencies/native-prerequisites.md) |
+| Model checkpoints | Overlay the existing TrackerSplat dump at root `checkpoints/`; store new/project-split weights under `data/checkpoints/`. The dump lacks the three default DOT files. | [checkpoint guide](../dependencies/model-checkpoints.md) |
 | Code state | Record each affected submodule's commit and dirty paths; root status is insufficient. | [code index](code/INDEX.md) |
-| Data | `data/` and `output/` are multi-terabyte, high-fan-out trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
+| Data | `data/`, `output/`, and `checkpoints/` are large overlay trees; inspect only explicit bounded paths. | [data index](data/INDEX.md) |
 
 ## Open ideas
 

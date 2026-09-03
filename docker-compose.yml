@@ -46,6 +46,9 @@ services:
       - type: volume
         source: codebase-output-overlay
         target: ${PWD:?PWD is required}/output
+      - type: volume
+        source: codebase-checkpoints-overlay
+        target: ${PWD:?PWD is required}/checkpoints
     entrypoint:
       - /bin/bash
       - -lc
@@ -72,3 +75,10 @@ volumes:
       device: overlay
       # Overlayfs requires workdir to live on the same filesystem as upperdir.
       o: lowerdir=/mnt/minorissd4tb/TrackerSplat/output,upperdir=${PWD}/output,workdir=${PWD}/.overlay-work/output
+  codebase-checkpoints-overlay:
+    driver: local
+    driver_opts:
+      type: overlay
+      device: overlay
+      # Overlayfs requires workdir to live on the same filesystem as upperdir.
+      o: lowerdir=/mnt/minorissd4tb/TrackerSplat/checkpoints,upperdir=${PWD}/checkpoints,workdir=${PWD}/.overlay-work/checkpoints

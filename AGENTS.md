@@ -39,6 +39,9 @@ the user did not explicitly ask for memory to be saved.
   prerequisite.
 - `data/` is a very large input tree (about 1.3 TB). Treat it as read-only unless
   the user explicitly requests a data change.
+- `checkpoints/` is a large pretrained-weight overlay (about 86 GB from the host
+  TrackerSplat dump). Treat it as read-only unless the user explicitly requests a
+  checkpoint change.
 - `output/` is a very large generated-results tree (about 1.5 TB). New raw logs,
   metrics, checkpoints, visualizations, and manifests belong under
   `output/harness-runs/<experiment-id>/`.
@@ -46,11 +49,11 @@ the user did not explicitly ask for memory to be saved.
   arrays, full diffs, images, videos, point clouds, or checkpoints into memory.
 - Do not modify the user's existing root `README.md` changes unless asked.
 
-Never recursively scan `.venv/`, `data/`, `output/`, `.git/`, `.overlay-work/`,
-or `.codex/`. For `data/` and `output/`, require an explicit target path and use
-bounded metadata operations (`-maxdepth`, counts, sizes, selected keys, `tail`,
-or sampling). Do not read binary bodies such as zip, mp4, npy, npz, image, ply,
-or checkpoint files into the conversation.
+Never recursively scan `.venv/`, `data/`, `output/`, `checkpoints/`, `.git/`,
+`.overlay-work/`, or `.codex/`. For `data/`, `output/`, and `checkpoints/`,
+require an explicit target path and use bounded metadata operations (`-maxdepth`,
+counts, sizes, selected keys, `tail`, or sampling). Do not read binary bodies
+such as zip, mp4, npy, npz, image, ply, or checkpoint files into the conversation.
 
 ## Startup protocol
 
