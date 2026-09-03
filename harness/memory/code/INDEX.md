@@ -15,4 +15,5 @@ and diff stats. Never place full diffs in this index.
 
 | Date | Scope | Reusable fact |
 | --- | --- | --- |
-| 2026-09-02 | Root `.venv` CUDA extensions | The host GPUs are RTX A5000 (SM 8.6) and protected PyTorch is 2.6.0+cu124. The current runtime has no `gcc`, `g++`, `nvcc`, or `CUDA_HOME`; TrackerSplat cannot build its three custom extensions until a CUDA 12.4 build toolchain is provided. The similarly named pip `nvidia-cuda-nvcc-cu12` wheel contains `ptxas`, not the `nvcc` driver. |
+| 2026-09-02 | Root `.venv` CUDA extensions | The host GPUs are RTX A5000 (SM 8.6) and protected PyTorch is 2.6.0+cu124. TrackerSplat's three repository-local extensions and historical dependency extensions are built and execute successfully. The runtime still has no `gcc`, `g++`, `nvcc`, or `CUDA_HOME`, so it can use but not rebuild them; the pip `nvidia-cuda-nvcc-cu12` wheel contains `ptxas`, not the `nvcc` driver. |
+| 2026-09-02 | Ubuntu 20.04 runtime ABI and native tools | Runtime glibc is 2.31. Pin Taichi 1.7.3 because the nominally manylinux_2_27 Taichi 1.7.4 CPython 3.12 wheel references GLIBC through 2.34; reinstalling cryptography 50.0.1 selected a compatible manylinux_2_28 wheel. System libGL/Open3D, COLMAP 3.6 CPU SIFT, and FFmpeg 4.2.7 H.264 encode all pass bounded tests. |

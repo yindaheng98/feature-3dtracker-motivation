@@ -9,10 +9,11 @@ scope: Docker runtime and dependency ownership
 
 ## Evidence
 
-- The current image starts from Ubuntu 20.04, while the host `.venv` interpreter
-  resolves to `/home/dahengyin/miniconda3/bin/python3.12` and glibc 2.39.
-- The compose repository bind includes `.venv`, and the read-only home bind is
-  currently expected to provide that interpreter.
+- The current image starts from Ubuntu 20.04/glibc 2.31 and mounts the root
+  `.venv` from the host. Wheels previously installed in a newer-glibc runtime
+  caused reproducible cryptography and Taichi loader failures in the container.
+- The read-only home bind is currently expected to provide the Python 3.12
+  interpreter behind that `.venv`.
 - TrackerSplat needs build-essential, CUDA 12.4 nvcc, libGL, FFmpeg, and COLMAP;
   these participate in ABI, linking, or executable discovery.
 

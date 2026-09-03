@@ -57,8 +57,9 @@ commands from the repository root:
 
 Do not install the five submodules' original requirement files directly: their
 documented Torch, CUDA, NumPy, and legacy API pins conflict. See
-`dependencies/native-prerequisites.md` before attempting TrackerSplat's CUDA
-extensions or external system tools.
+`dependencies/native-prerequisites.md` for the environment ownership decision
+table, safe repair workflow, known compatible versions, and escalation rules
+before attempting TrackerSplat's CUDA extensions or external system tools.
 
 If an attempt does not satisfy the user's acceptance criteria, the agent must
 restore only that attempt's code/configuration changes before ending the turn,
@@ -80,11 +81,17 @@ Run a harness self-check with:
 - `memory/*/INDEX.md`: category routing indexes, read on demand.
 - `memory/experiments/YYYY/MM/*.md`: one experiment per file.
 - `memory/inbox/`: unique subagent candidate summaries awaiting main-agent merge.
-- `memory/archive/`: cold monthly/topic summaries; canonical experiment cards stay.
+- `memory/archive/`: cold monthly/topic summaries.
 - `output/harness-runs/`: raw and potentially large generated artifacts.
 
 Memory contains observations, evidence paths, interpretations, conclusions, and
 decisions—not chat transcripts or raw logs.
+
+When the user requests compaction, a set of obsolete experiment cards may be
+replaced by one durable topical guide after the main agent verifies that all
+reusable facts, decisions, and routes were merged. Update both experiment
+indexes and all references in the same change. Raw run artifacts remain under
+`output/` unless the user separately asks to delete them.
 
 ## Local specialized agents
 

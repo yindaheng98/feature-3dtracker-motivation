@@ -56,7 +56,9 @@ evo
 xformers==0.0.29.post3
 
 # TrackerSplat and cross-project model utilities
-taichi
+# Taichi 1.7.4's CPython 3.12 wheel is tagged manylinux_2_27 but references
+# GLIBC through 2.34. 1.7.3 is the newest release that loads on GLIBC 2.31.
+taichi==1.7.3
 einshape
 timm
 jaxtyping

@@ -27,8 +27,16 @@ the user did not explicitly ask for memory to be saved.
   `harness/dependencies/protected-stack.txt`; never install a submodule's raw
   requirements file when it would replace the selected PyTorch/CUDA/NumPy
   stack. Recheck protected versions and run `pip check` after every dependency
-  change. Native prerequisites and known gaps are documented in
-  `harness/dependencies/native-prerequisites.md`.
+  change. Environment ownership, native prerequisites, and known gaps are
+  documented in `harness/dependencies/native-prerequisites.md`.
+- Classify environment failures before acting. With dependency-change
+  authorization, the agent may repair Python packages and compatible binary
+  wheels inside `.venv`. Missing system libraries/executables, compilers,
+  CUDA toolkits/drivers, container ABI changes, credentials, datasets, and
+  checkpoints are user/host responsibilities unless the user explicitly
+  authorizes the corresponding image, system, or download change. Never use a
+  similarly named pip package or another Python environment to hide a host
+  prerequisite.
 - `data/` is a very large input tree (about 1.3 TB). Treat it as read-only unless
   the user explicitly requests a data change.
 - `output/` is a very large generated-results tree (about 1.5 TB). New raw logs,

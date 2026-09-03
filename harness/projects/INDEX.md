@@ -20,14 +20,21 @@ the manifests under `harness/dependencies/`, preserve the protected stack, and
 run an import/version preflight after every dependency change. Do not create a
 per-submodule environment.
 
-The shared Python dependency set is installed. LAPA, MV-TAP, Open-d4rt, and
-SpaTrackerV2 pass model-construction or synthetic-forward smokes on the selected
-stack. TrackerSplat's historical external packages and nested submodules are
-present, but its own three CUDA extensions cannot be built until the host
-provides `gcc`, `g++`, and CUDA 12.4 `nvcc`/`CUDA_HOME`. InstantSplat's standard
-dense path also needs the system `libGL.so.1`. Details are in
-`../dependencies/native-prerequisites.md` and experiment
-`EXP-20260902T224607Z-fe07`.
+The shared Python dependency set is installed. All five projects pass bounded
+executable smokes on the selected stack: LAPA and Open-d4rt synthetic forwards,
+MV-TAP a tiny CUDA forward, SpaTrackerV2 full model construction, and
+TrackerSplat imports/CLIs plus real calls into its KNN, featurefusion, and
+motionfusion CUDA extensions. TrackerSplat's historical external native
+extensions also execute successfully. The sole `pip check` complaint is a
+distribution-name mismatch (`opencv-python` versus the working
+`opencv-python-headless` provider), disproved with an actual encode/color-convert
+test. The durable evidence summary is in
+`../dependencies/native-prerequisites.md`.
+
+System `libGL.so.1`, COLMAP 3.6 CPU SIFT, FFmpeg 4.2.7, and the ImageIO bundled
+FFmpeg have passed bounded tests. Full dataset workflows may still require
+project weights, explicit data paths, and newer/GPU-enabled system tools. See
+`../dependencies/native-prerequisites.md` for ownership and escalation rules.
 
 The host exposes four RTX A5000 GPUs, while some scripts assume eight. A command
 requiring more than one GPU, model/data downloads, training, full evaluation, or

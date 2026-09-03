@@ -16,19 +16,25 @@ size/iteration counts, an explicit pipeline, and a unique destination under
 The relevant module is typically:
 
 ```bash
-../.venv/bin/python -m trackersplat.motionestimation <explicit bounded args>
+mkdir -p ../output/harness-runs/<experiment-id>/taichi-cache
+TI_OFFLINE_CACHE_FILE_PATH=../output/harness-runs/<experiment-id>/taichi-cache \
+  ../.venv/bin/python -m trackersplat.motionestimation <explicit bounded args>
 ```
 
 Inspect the current CLI before constructing exact arguments; do not copy a batch
-script's full matrix into the main context.
+script's full matrix into the main context. The explicit Taichi cache path is
+required on hosts where the default `~/.cache/taichi` location is not writable.
 
 ## Harness rules
 
 - `tools/extract_*`, `init_*`, `save_*`, render, and merge scripts may contain
   `rm -rf`, overwrite, unzip, move, or all-dataset loops. Do not run them as a
   generic smoke test.
-- Several nested CUDA-related submodules may be uninitialized and dependencies
-  require compilation. Do not initialize/build/install automatically.
+- The nested submodules are initialized at their recorded gitlinks and the
+  repository-local target install contains all three CUDA extensions. Run from
+  `TrackerSplat/`; the package is intentionally not installed globally into
+  `.venv`. Rebuild only when explicitly requested, because the current host has
+  no local compiler/nvcc toolchain.
 - Existing-result skip behavior can mistake a failed partial output for success.
   Always use a unique run directory and verify expected metrics/artifacts.
 - On failure, remove or quarantine only the current unique run output and revert
@@ -36,3 +42,12 @@ script's full matrix into the main context.
 - The documented NumPy/CUDA stack conflicts with other submodules; preflight the
   active environment.
 
+## Validated runtime smoke
+
+On Python 3.12.8 and protected Torch 2.6.0+cu124, package import, the
+`motionestimation` and `pointtracking` CLIs, and actual GPU calls into the local
+KNN, featurefusion, and motionfusion extensions pass. Historical
+gaussian-splatting and reduced-3dgs CUDA functions and InstantSplat's CroCo RoPE
+extension also load/execute without an ABI error. This validates the installed
+code layer, not model weights, datasets, COLMAP preprocessing, or a full
+reconstruction.
