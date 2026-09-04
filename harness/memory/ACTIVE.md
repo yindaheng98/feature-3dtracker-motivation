@@ -1,5 +1,5 @@
 # Active Work
 
-No unfinished experiment or attempt-owned patch is active. The stage-1
-PStudio temporal-stride pilot completed all 24 model forwards and both plots;
-see `experiments/panoptic-temporal-stride-pilot.md`.
+No unfinished experiment or attempt-owned patch is active. The four-model
+point-count/frame-count inference scaling benchmark completed successfully; see
+`experiments/panoptic-inference-scaling.md`.

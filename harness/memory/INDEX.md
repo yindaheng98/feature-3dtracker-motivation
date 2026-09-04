@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-03T20:41:25Z
+Updated: 2026-09-04T00:06:29Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -22,7 +22,8 @@ across the five submodules while keeping evidence reproducible and context small
 
 | Date/topic | Reusable conclusion | Detail |
 | --- | --- | --- |
-| 2026-09-03 · PStudio temporal-stride pilot | Fixed 16-frame/64-point runs completed at six strides for all four models; three degrade overall and Spa is non-monotonic on `juggle_7`, so multi-scene confirmation is required. | [result](experiments/panoptic-temporal-stride-pilot.md) |
+| 2026-09-04 · PStudio inference scaling | Frame count dominates runtime for all four models; only Open-d4rt scales strongly with requested point count, while fixed support/virtual work dominates Spa, MV-TAP, and LAPA. | [result](experiments/panoptic-inference-scaling.md) |
+| 2026-09-03 · PStudio temporal-stride pilot | Fixed 16-frame/64-point runs completed at six strides for all four models; reference-camera GIF/contact-sheet renderings cover strides 1/4/8; three models degrade overall and Spa is non-monotonic on `juggle_7`. | [result](experiments/panoptic-temporal-stride-pilot.md) |
 | 2026-09-03 · Panoptic four-project bring-up | SpaTrackerV2, Open-d4rt, MV-TAP, and LAPA all completed real-checkpoint forwards on shared `juggle_7`; adapters and bounded metrics are reproducible. | [result](experiments/panoptic-four-project-bringup.md) |
 | 2026-09-02 · shared environment and five-project smoke validation | Earlier setup checks were consolidated into the environment ownership and troubleshooting guide. | [environment guide](../dependencies/native-prerequisites.md) |
 

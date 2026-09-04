@@ -132,3 +132,39 @@ writes:
 
 LAPA's CoTracker caches are recomputed from the sparsely sampled video for every
 stride; they are not subsampled from a dense-video tracker run.
+
+Render the saved 3D predictions in reference camera 7 without rerunning the
+models:
+
+```bash
+.venv/bin/python experiments/panoptic_multitracker/render_temporal_tracks.py \
+  --strides 1 4 8
+```
+
+The renderer projects every model's 3D result into the image, selects the same
+16 high-motion GT point slots for all comparisons, and writes animated GIFs,
+four-time-step contact sheets, and a final-frame overview under
+`output/panoptic_multitracker/temporal_stride/renderings/`. Colored circles and
+trails are predictions; white crosses and trails are ground truth. Each trail
+contains up to eight sampled frames, so its raw-time span grows with stride.
+
+## Inference scaling
+
+Measure point-count and frame-count scaling on the same `juggle_7` source:
+
+```bash
+MPLCONFIGDIR="$PWD/output/panoptic_multitracker/inference_scaling/matplotlib" \
+.venv/bin/python experiments/panoptic_multitracker/benchmark_inference_scaling.py \
+  --point-counts 8 16 32 64 --fixed-frames 16 \
+  --frame-counts 8 16 32 --fixed-points 32 \
+  --warmup 1 --repeats 3 --physical-gpu 1 --resume
+```
+
+The benchmark uses nested frame/point prefixes, excludes checkpoint loading,
+file I/O, metrics, and saving, and synchronizes CUDA around each measured model
+forward. SpaTrackerV2 reports Front and Offline Tracker stages separately; LAPA
+uses its existing CoTracker/DINO cache and times only the LAPA forward. Raw
+samples, medians, IQRs, memory peaks, commands, and plots are written under
+`output/panoptic_multitracker/inference_scaling/`. Because model boundaries,
+views, and internal support points differ, compare scaling within a model; do
+not treat the absolute latency values as a cross-model speed leaderboard.

@@ -17,10 +17,10 @@ ROOT = Path(__file__).resolve().parents[2]
 LAPA_ROOT = ROOT / "Look-Around-and-Pay-Attention-LAPA-"
 sys.path.insert(0, str(LAPA_ROOT))
 
-from evaluate_lapa import predict_batch  # noqa: E402
 from lapa.data.mc_dataset import TAPVid3DMCEvalDataset  # noqa: E402
 from lapa.eval.protocol import score_tracks  # noqa: E402
 from lapa.models.lapa import LAPA  # noqa: E402
+from inference_timing import measure_inference  # noqa: E402
 
 
 def main() -> None:
@@ -32,6 +32,9 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--max-points", type=int, default=64)
+    parser.add_argument("--frames", type=int)
+    parser.add_argument("--timing-warmup", type=int, default=0)
+    parser.add_argument("--timing-repeats", type=int, default=1)
     args = parser.parse_args()
 
     cache_paths = sorted(args.feature_dir.glob("*/ref*_cam*.h5"))
@@ -73,8 +76,45 @@ def main() -> None:
         use_gt_tracks=False,
     )
     batch = dataset[0]
-    with torch.no_grad():
-        pred = predict_batch(model, batch, device)
+    frames = min(args.frames or batch["gt_world"].shape[0], batch["gt_world"].shape[0])
+    points = batch["queries0"].shape[0]
+    queries0 = batch["queries0"][:points].to(device)
+    view_k_device = [value.to(device) for value in batch["view_K"]]
+    view_w2c_device = [value.to(device) for value in batch["view_w2c_norm"]]
+    view_pts_device = [
+        [value[:points].to(device) for value in view[:frames]]
+        for view in batch["view_points_2d_native"]
+    ]
+    view_feats_device = [
+        [value[:points].to(device) for value in view[:frames]]
+        for view in batch["view_features_native"]
+    ]
+    view_valid_device = [
+        value[:frames, :points].to(device) for value in batch["visible_per_view"]
+    ]
+
+    def run_model():
+        with torch.no_grad():
+            return model(
+                view_pts_device,
+                view_feats_device,
+                view_k_device,
+                view_w2c_device,
+                queries0,
+                tuple(batch["image_size"]),
+                view_valid=view_valid_device,
+            )
+
+    output, timing = measure_inference(
+        run_model, device, args.timing_warmup, args.timing_repeats
+    )
+    pred_norm = output["points_3d"].float().cpu().numpy()
+    pred = {
+        "pred_world": pred_norm * batch["aabb_half"].numpy() + batch["aabb_center"].numpy(),
+        "pred_visible": output["vis_logits"].float().cpu().numpy() > 0,
+        "gt_world": batch["gt_world"][:frames, :points].numpy(),
+        "gt_visible": batch["visible"][:frames, :points].numpy(),
+    }
     k = batch["view_K"][0].numpy()
     w2c = batch["view_w2c_world"][0].numpy()
     intrinsics = np.asarray([k[0, 0], k[1, 1], k[0, 2], k[1, 2]])
@@ -94,6 +134,7 @@ def main() -> None:
             "checkpoint_missing": 0,
             "checkpoint_unexpected": 0,
             "cache_checks": cache_checks,
+            "timing": timing,
         }
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)

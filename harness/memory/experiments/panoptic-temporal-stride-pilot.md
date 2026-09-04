@@ -46,8 +46,19 @@ six-scene stage is needed before making a model-level conclusion.
 - Metrics: `output/panoptic_multitracker/temporal_stride/common_metrics.csv`
 - Absolute curves: `output/panoptic_multitracker/temporal_stride/accuracy_vs_stride.png`
 - AJ retention: `output/panoptic_multitracker/temporal_stride/aj3d_retention_vs_stride.png`
+- Reference-camera render overview:
+  `output/panoptic_multitracker/temporal_stride/renderings/final_frame_comparison.png`
+- Sixteen-frame animations and four-time-step contact sheets for strides 1, 4,
+  and 8: `output/panoptic_multitracker/temporal_stride/renderings/`
 - Raw predictions and bounded logs: one `results/<model>/` directory below
   each `output/panoptic_multitracker/temporal_stride/stride_<n>/`.
+
+The renderings project the saved 3D outputs rather than substituting native 2D
+tracks. They use the same 16 high-motion point slots across all models and
+strides; colored trails/circles show predictions and white trails/crosses show
+GT. Visual inspection confirmed that the overlays follow the subject and that
+the growing drift is visible at larger strides. The rendering selection and
+legend are recorded in `renderings/render_manifest.json`.
 
 The pilot also exposed a reusable LAPA integration requirement: the public
 evaluator's `feature_dir` argument does not populate the dataset's separate

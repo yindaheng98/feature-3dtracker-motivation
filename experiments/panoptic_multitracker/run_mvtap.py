@@ -21,6 +21,7 @@ sys.path.insert(0, str(MVTAP_ROOT))
 
 import model_utils  # noqa: E402
 from models.mvtap import MVTAP  # noqa: E402
+from inference_timing import measure_inference  # noqa: E402
 
 
 def decode_video(npz_path: Path, frames: int) -> np.ndarray:
@@ -72,6 +73,8 @@ def main() -> None:
     parser.add_argument("--frames", type=int, default=16)
     parser.add_argument("--max-points", type=int, default=32)
     parser.add_argument("--device", default="cuda:0")
+    parser.add_argument("--timing-warmup", type=int, default=0)
+    parser.add_argument("--timing-repeats", type=int, default=1)
     args = parser.parse_args()
 
     meta = json.loads((args.mc_dir / f"{args.scene}_mc.json").read_text())
@@ -172,15 +175,20 @@ def main() -> None:
         "intrinsic": torch.from_numpy(np.repeat(k_np[:, None], frame_count, axis=1))[None].to(device),
         "extrinsic": torch.from_numpy(np.repeat(w2c_np[:, None], frame_count, axis=1))[None].to(device),
     }
-    with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-        output = model(
-            batch["video"],
-            batch["query_points"].clone(),
-            batch["intrinsic"],
-            batch["extrinsic"],
-            iters=4,
-            is_train=False,
-        )
+    def run_model():
+        with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+            return model(
+                batch["video"],
+                batch["query_points"].clone(),
+                batch["intrinsic"],
+                batch["extrinsic"],
+                iters=4,
+                is_train=False,
+            )
+
+    output, timing = measure_inference(
+        run_model, device, args.timing_warmup, args.timing_repeats
+    )
     native = {
         key: float(np.asarray(value).mean())
         for key, value in model_utils.eval_batch(batch, output).items()
@@ -194,7 +202,15 @@ def main() -> None:
     thresholds = (0.01, 0.04, 0.16, 0.64, 2.56)
     native["triangulated_mpjpe_m"] = float(error.mean()) if len(error) else float("nan")
     native["triangulated_apd3d"] = float(np.mean([np.mean(error < threshold) for threshold in thresholds])) if len(error) else float("nan")
-    native.update({"frames": frame_count, "points": len(selected), "views": views, "triangulated_samples": len(error)})
+    native.update(
+        {
+            "frames": frame_count,
+            "points": len(selected),
+            "views": views,
+            "triangulated_samples": len(error),
+            "timing": timing,
+        }
+    )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(native, indent=2) + "\n")

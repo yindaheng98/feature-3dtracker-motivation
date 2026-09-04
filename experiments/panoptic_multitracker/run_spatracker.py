@@ -28,6 +28,7 @@ from models.SpaTrackV2.models.vggt4track.models.vggt_moe import (  # noqa: E402
 from models.SpaTrackV2.models.vggt4track.utils.load_fn import (  # noqa: E402
     preprocess_image,
 )
+from inference_timing import measure_inference  # noqa: E402
 
 
 def decode_video(payload: np.ndarray, frames: int) -> torch.Tensor:
@@ -60,6 +61,8 @@ def main() -> None:
     parser.add_argument("--frames", type=int, default=16)
     parser.add_argument("--max-points", type=int, default=32)
     parser.add_argument("--support-points", type=int, default=64)
+    parser.add_argument("--timing-warmup", type=int, default=0)
+    parser.add_argument("--timing-repeats", type=int, default=1)
     args = parser.parse_args()
 
     with np.load(args.sequence, allow_pickle=True) as pack:
@@ -88,8 +91,15 @@ def main() -> None:
     device = torch.device(args.device)
     front_video = preprocess_image(video)
     front = VGGT4Track.from_pretrained("Yuxihenry/SpatialTrackerV2_Front").eval().to(device)
-    with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-        front_out = front(front_video[None].to(device) / 255.0)
+    front_input = front_video[None].to(device) / 255.0
+
+    def run_front():
+        with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+            return front(front_input)
+
+    front_out, front_timing = measure_inference(
+        run_front, device, args.timing_warmup, args.timing_repeats
+    )
     depth = front_out["points_map"][..., 2].squeeze(0).float().cpu().numpy()
     predicted_intrinsics = front_out["intrs"].squeeze(0).float().cpu().numpy()
     del front, front_out
@@ -100,20 +110,25 @@ def main() -> None:
     tracker.eval()
     tracker.to(device)
     extrinsics = np.repeat(np.eye(4, dtype=np.float32)[None], frames, axis=0)
-    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-        result = tracker.forward(
-            front_video,
-            depth=depth,
-            intrs=predicted_intrinsics,
-            extrs=extrinsics,
-            queries=queries,
-            full_point=True,
-            iters_track=4,
-            query_no_BA=True,
-            fixed_cam=True,
-            stage=1,
-            support_frame=frames - 1,
-        )
+    def run_tracker():
+        with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+            return tracker.forward(
+                front_video,
+                depth=depth,
+                intrs=predicted_intrinsics,
+                extrs=extrinsics,
+                queries=queries,
+                full_point=True,
+                iters_track=4,
+                query_no_BA=True,
+                fixed_cam=True,
+                stage=1,
+                support_frame=frames - 1,
+            )
+
+    result, tracker_timing = measure_inference(
+        run_tracker, device, args.timing_warmup, args.timing_repeats
+    )
 
     pred_xyz = result[4][..., :3].float().cpu().numpy()
     pred_visible = (result[6][..., 0].float().cpu().numpy() > 0.5)
@@ -131,7 +146,19 @@ def main() -> None:
     joint = gt_visible & pred_visible & np.isfinite(pred_xyz).all(-1)
     scale = float(np.median(np.linalg.norm(gt_xyz[joint], axis=-1)) / np.median(np.linalg.norm(pred_xyz[joint], axis=-1)))
     metrics["epe_median_scaled_m"] = float(np.linalg.norm(pred_xyz[joint] * scale - gt_xyz[joint], axis=-1).mean())
-    metrics.update({"frames": frames, "points": len(selected), "scale": scale})
+    metrics.update(
+        {
+            "frames": frames,
+            "points": len(selected),
+            "scale": scale,
+            "timing": {
+                "median_seconds": front_timing["median_seconds"]
+                + tracker_timing["median_seconds"],
+                "front": front_timing,
+                "tracker": tracker_timing,
+            },
+        }
+    )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
