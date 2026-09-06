@@ -168,3 +168,42 @@ samples, medians, IQRs, memory peaks, commands, and plots are written under
 `output/panoptic_multitracker/inference_scaling/`. Because model boundaries,
 views, and internal support points differ, compare scaling within a model; do
 not treat the absolute latency values as a cross-model speed leaderboard.
+
+## Unannotated walking and taekwondo sequences
+
+The qualitative runner samples 32 frames across each complete sequence and
+selects 32 shared frame-1 surface queries from temporal-motion regions. Camera
+`0.png` is the rendered reference view; calibrated cameras `1.png` and `2.png`
+provide the multi-view inputs for MV-TAP and LAPA. The source TIFF is interpreted
+as inverse depth only to initialize the same world-space queries for the
+multi-view models. There is no ground truth, metric calculation, or GT overlay.
+The sampled frames are not consecutive: this preserves the late walking motion,
+so rendered trail length is not a measure of per-frame speed or temporal-stride
+robustness.
+
+Run all four pretrained models and render their predicted trajectories from the
+repository root (this example maps physical GPU 1 to `cuda:0`):
+
+```bash
+for scene in walking taekwondo; do
+  result="output/panoptic_multitracker/qualitative_no_gt/$scene"
+  .venv/bin/python experiments/panoptic_multitracker/prepare_qualitative_no_gt.py \
+    "data/$scene" --output-dir "$result" --frames 32 --points 32
+  for model in opend4rt spatracker mvtap lapa; do
+    HF_HOME="$PWD/checkpoints/huggingface" TORCH_HOME="$PWD/checkpoints/torch" \
+    HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES=1 .venv/bin/python \
+      experiments/panoptic_multitracker/run_qualitative_no_gt.py \
+      "$result/manifest.npz" --model "$model" \
+      --output "$result/predictions/$model.npz" --device cuda:0
+  done
+  .venv/bin/python experiments/panoptic_multitracker/render_qualitative_no_gt.py \
+    "$result"
+done
+```
+
+Each scene produces a 32-frame `tracks_four_model.gif`, a four-time-step
+`tracks_contact_sheet.png`, and a `tracks_final_frame.png`. Panel order is
+Open-d4rt, SpaTrackerV2, MV-TAP, and LAPA. Colored dots and trails are predictions
+only. Static titles include the model's median first-frame query-anchor error;
+this is an initialization diagnostic, not a GT accuracy metric. These artifacts
+support qualitative inspection rather than an accuracy ranking.
