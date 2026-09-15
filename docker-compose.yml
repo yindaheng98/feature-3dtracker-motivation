@@ -60,6 +60,7 @@ services:
         exec "$@"
       - --
     command: codex -a never -s danger-full-access
+    # command: qodercn --permission-mode yolo
 
 volumes:
   codebase-data-overlay:
