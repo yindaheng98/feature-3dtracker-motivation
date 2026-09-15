@@ -1,6 +1,6 @@
 # Project Memory Index
 
-Updated: 2026-09-06T18:06:10Z
+Updated: 2026-09-15T18:13:31Z
 Schema: memory-v1
 Budget: no more than 12 KiB or 200 lines
 
@@ -22,8 +22,9 @@ across the five submodules while keeping evidence reproducible and context small
 
 | Date/topic | Reusable conclusion | Detail |
 | --- | --- | --- |
+| 2026-09-15 · walking/taekwondo 64-frame memory trace | Eight 64-frame forwards completed with wall-time allocator traces; Spa Front is the largest peak (~17 GiB allocated), while LAPA's peak comes from CoTracker preprocessing. | [result](experiments/walking-taekwondo-64f-memory.md) |
 | 2026-09-06 · walking/taekwondo qualitative tracking | Four real pretrained trackers completed 32-frame/32-point no-GT renderings on both scenes; LAPA has the largest query-frame offset and visible drift, especially on walking. | [result](experiments/walking-taekwondo-qualitative.md) |
-| 2026-09-04 · PStudio inference scaling | Frame count dominates runtime for all four models; only Open-d4rt scales strongly with requested point count, while fixed support/virtual work dominates Spa, MV-TAP, and LAPA. | [result](experiments/panoptic-inference-scaling.md) |
+| 2026-09-15 · extended PStudio inference scaling | Frame scaling reaches 150/OOM, while a separate 221-point single-window sweep finds subquadratic point exponents (Open/Spa/MV/LAPA: 0.60/0.02/0.17/0.01); forcing a quadratic wall-time claim is unsupported. | [result](experiments/panoptic-inference-scaling.md) |
 | 2026-09-03 · PStudio temporal-stride pilot | Fixed 16-frame/64-point runs completed at six strides for all four models; reference-camera GIF/contact-sheet renderings cover strides 1/4/8; three models degrade overall and Spa is non-monotonic on `juggle_7`. | [result](experiments/panoptic-temporal-stride-pilot.md) |
 | 2026-09-03 · Panoptic four-project bring-up | SpaTrackerV2, Open-d4rt, MV-TAP, and LAPA all completed real-checkpoint forwards on shared `juggle_7`; adapters and bounded metrics are reproducible. | [result](experiments/panoptic-four-project-bringup.md) |
 | 2026-09-02 · shared environment and five-project smoke validation | Earlier setup checks were consolidated into the environment ownership and troubleshooting guide. | [environment guide](../dependencies/native-prerequisites.md) |

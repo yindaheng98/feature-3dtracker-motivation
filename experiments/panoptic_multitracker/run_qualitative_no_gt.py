@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
+import threading
+import time
 from pathlib import Path
 
 import numpy as np
@@ -31,7 +34,71 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--query-chunk-size", type=int, default=32)
     parser.add_argument("--support-points", type=int, default=64)
+    parser.add_argument(
+        "--memory-trace",
+        type=Path,
+        help="Optional CSV for sampled PyTorch CUDA allocated/reserved memory",
+    )
+    parser.add_argument("--memory-sample-ms", type=float, default=50.0)
     return parser.parse_args()
+
+
+class CudaMemoryTrace:
+    """Sample allocator state without synchronizing or modifying model results."""
+
+    def __init__(self, device: torch.device, interval_ms: float) -> None:
+        if interval_ms <= 0:
+            raise ValueError("--memory-sample-ms must be positive")
+        self.device = device
+        self.device_index = device.index if device.index is not None else torch.cuda.current_device()
+        self.interval_seconds = interval_ms / 1000.0
+        self.started_at = 0.0
+        self.samples: list[dict[str, float | str]] = []
+        self.lock = threading.Lock()
+        self.stop_event = threading.Event()
+        self.thread: threading.Thread | None = None
+
+    def _sample(self, event: str = "") -> None:
+        sample = {
+            "elapsed_s": time.perf_counter() - self.started_at,
+            "allocated_mib": torch.cuda.memory_allocated(self.device_index) / 2**20,
+            "reserved_mib": torch.cuda.memory_reserved(self.device_index) / 2**20,
+            "peak_allocated_mib": torch.cuda.max_memory_allocated(self.device_index) / 2**20,
+            "peak_reserved_mib": torch.cuda.max_memory_reserved(self.device_index) / 2**20,
+            "event": event,
+        }
+        with self.lock:
+            self.samples.append(sample)
+
+    def start(self) -> None:
+        torch.cuda.init()
+        torch.cuda.reset_peak_memory_stats(self.device_index)
+        self.started_at = time.perf_counter()
+        self._sample("runner_start")
+        self.thread = threading.Thread(target=self._run, name="cuda-memory-trace", daemon=True)
+        self.thread.start()
+
+    def _run(self) -> None:
+        while not self.stop_event.wait(self.interval_seconds):
+            self._sample()
+
+    def mark(self, event: str) -> None:
+        self._sample(event)
+
+    def stop_and_write(self, path: Path, end_event: str) -> None:
+        self.stop_event.set()
+        if self.thread is not None:
+            self.thread.join()
+        self._sample(end_event)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with self.lock:
+            samples = sorted(self.samples, key=lambda item: float(item["elapsed_s"]))
+        temporary = path.with_suffix(".partial.csv")
+        with temporary.open("w", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(samples[0]))
+            writer.writeheader()
+            writer.writerows(samples)
+        temporary.replace(path)
 
 
 def only_path(pattern: str) -> Path:
@@ -52,7 +119,9 @@ def manifest_values(manifest: dict) -> tuple[Path, np.ndarray, list[str], np.nda
     )
 
 
-def run_opend4rt(manifest: dict, device: torch.device, query_chunk_size: int) -> dict:
+def run_opend4rt(
+    manifest: dict, device: torch.device, query_chunk_size: int, trace: CudaMemoryTrace | None
+) -> dict:
     d4rt_root = ROOT / "Open-d4rt"
     sys.path.insert(0, str(d4rt_root))
     from infer_track_3d import _infer_tracks, _resize_video, _unwrap_state_dict
@@ -61,6 +130,8 @@ def run_opend4rt(manifest: dict, device: torch.device, query_chunk_size: int) ->
 
     scene_root, frames, cameras, _, _, _ = manifest_values(manifest)
     video = load_video(scene_root, frames, cameras[0])
+    if trace:
+        trace.mark("rgb_loaded")
     height, width = video.shape[1:3]
     query_uv = manifest["query_uv_ref"].astype(np.float32)
     query_norm = query_uv / np.asarray([max(width - 1, 1), max(height - 1, 1)], np.float32)
@@ -77,9 +148,13 @@ def run_opend4rt(manifest: dict, device: torch.device, query_chunk_size: int) ->
     if loaded.missing_keys or loaded.unexpected_keys:
         raise RuntimeError("Open-d4rt checkpoint mismatch")
     model.to(device).eval()
+    if trace:
+        trace.mark("checkpoint_on_device")
     model_height, model_width = [
         int(value) for value in config.get_path("model.input.image_size", [256, 256])
     ]
+    if trace:
+        trace.mark("before_tracking")
     prediction = _infer_tracks(
         model=model,
         video_model_rgb=_resize_video(video, (model_height, model_width)),
@@ -87,6 +162,8 @@ def run_opend4rt(manifest: dict, device: torch.device, query_chunk_size: int) ->
         query_uv_norm=query_norm,
         query_chunk_size=query_chunk_size,
     )
+    if trace:
+        trace.mark("after_tracking")
     pred_uv = prediction["tracks_uv_norm"].transpose(1, 0, 2)
     pred_uv *= np.asarray([max(width - 1, 1), max(height - 1, 1)], np.float32)
     return {
@@ -97,7 +174,10 @@ def run_opend4rt(manifest: dict, device: torch.device, query_chunk_size: int) ->
 
 
 def run_spatracker(
-    manifest: dict, device: torch.device, support_points: int
+    manifest: dict,
+    device: torch.device,
+    support_points: int,
+    trace: CudaMemoryTrace | None,
 ) -> dict:
     spa_root = ROOT / "SpaTrackerV2"
     sys.path.insert(0, str(spa_root))
@@ -107,6 +187,8 @@ def run_spatracker(
 
     scene_root, frames, cameras, _, _, _ = manifest_values(manifest)
     video_np = load_video(scene_root, frames, cameras[0])
+    if trace:
+        trace.mark("rgb_loaded")
     video = torch.from_numpy(video_np).permute(0, 3, 1, 2).float()
     height, width = video.shape[-2:]
     new_width = 518
@@ -119,18 +201,29 @@ def run_spatracker(
 
     processed = preprocess_image(video)
     front = VGGT4Track.from_pretrained("Yuxihenry/SpatialTrackerV2_Front").eval().to(device)
+    if trace:
+        trace.mark("front_on_device")
+        trace.mark("before_front")
     with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         front_out = front(processed[None].to(device) / 255.0)
+    if trace:
+        trace.mark("after_front")
     depth = front_out["points_map"][..., 2].squeeze(0).float().cpu().numpy()
     intrinsics = front_out["intrs"].squeeze(0).float().cpu().numpy()
     del front, front_out
     torch.cuda.empty_cache()
+    if trace:
+        trace.mark("front_released")
 
     tracker = Predictor.from_pretrained("Yuxihenry/SpatialTrackerV2-Offline")
     tracker.spatrack.track_num = support_points
     tracker.eval()
     tracker.to(device)
+    if trace:
+        trace.mark("tracker_on_device")
     extrinsics = np.repeat(np.eye(4, dtype=np.float32)[None], len(frames), axis=0)
+    if trace:
+        trace.mark("before_tracker")
     with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         result = tracker.forward(
             processed,
@@ -145,6 +238,8 @@ def run_spatracker(
             stage=1,
             support_frame=len(frames) - 1,
         )
+    if trace:
+        trace.mark("after_tracker")
     pred_uv = result[5][..., :2].float().cpu().numpy()
     pred_uv[..., 0] *= width / new_width
     pred_uv[..., 1] = (pred_uv[..., 1] + crop_y) * height / new_height
@@ -194,12 +289,16 @@ def prepare_multiview(manifest: dict) -> tuple[list[np.ndarray], np.ndarray, np.
     return videos, np.stack(scaled_K), w2c, np.stack(query_uv)
 
 
-def run_mvtap(manifest: dict, device: torch.device) -> dict:
+def run_mvtap(
+    manifest: dict, device: torch.device, trace: CudaMemoryTrace | None
+) -> dict:
     mvtap_root = ROOT / "MV-TAP"
     sys.path.insert(0, str(mvtap_root))
     from models.mvtap import MVTAP
 
     videos, K, w2c, query_uv = prepare_multiview(manifest)
+    if trace:
+        trace.mark("multiview_rgb_loaded")
     views, points = query_uv.shape[:2]
     frame_count = len(manifest["frame_numbers"])
     video = torch.from_numpy(np.stack(videos)).permute(0, 1, 4, 2, 3).float()
@@ -227,8 +326,12 @@ def run_mvtap(manifest: dict, device: torch.device) -> dict:
     if loaded.missing_keys or loaded.unexpected_keys:
         raise RuntimeError("MV-TAP checkpoint mismatch")
     model.eval().to(device)
+    if trace:
+        trace.mark("checkpoint_on_device")
     intrinsic = torch.from_numpy(np.repeat(K[:, None], frame_count, axis=1))[None].to(device)
     extrinsic = torch.from_numpy(np.repeat(w2c[:, None], frame_count, axis=1))[None].to(device)
+    if trace:
+        trace.mark("before_tracking")
     with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         output = model(
             video[None].to(device),
@@ -238,10 +341,14 @@ def run_mvtap(manifest: dict, device: torch.device) -> dict:
             iters=4,
             is_train=False,
         )
+    if trace:
+        trace.mark("after_tracking")
     pred_views = output[0][0].float().cpu().numpy()
     visible_views = (output[1][0] * output[2][0]).float().cpu().numpy() > 0.6
     projection = np.stack([K[view] @ w2c[view, :3] for view in range(views)])
     pred_world = triangulate_tracks(pred_views, projection, visible_views)
+    if trace:
+        trace.mark("after_triangulation")
     native_height, native_width = int(manifest["heights"][0]), int(manifest["widths"][0])
     pred_ref = pred_views[0].copy()
     pred_ref[..., 0] *= native_width / 512
@@ -255,18 +362,24 @@ def run_mvtap(manifest: dict, device: torch.device) -> dict:
     }
 
 
-def run_lapa(manifest: dict, device: torch.device) -> dict:
+def run_lapa(
+    manifest: dict, device: torch.device, trace: CudaMemoryTrace | None
+) -> dict:
     lapa_root = ROOT / "Look-Around-and-Pay-Attention-LAPA-"
     sys.path.insert(0, str(lapa_root))
     from lapa.features.precompute import DINOv2FeatureExtractor, get_cotracker, run_cotracker
     from lapa.models.lapa import LAPA, build_w2c_normalized
 
     videos, K, w2c, query_uv = prepare_multiview(manifest)
+    if trace:
+        trace.mark("multiview_rgb_loaded")
     query_world = manifest["query_world"].astype(np.float32)
     views, points = query_uv.shape[:2]
     frame_count = len(manifest["frame_numbers"])
 
     cotracker = get_cotracker(device)
+    if trace:
+        trace.mark("cotracker_on_device")
     tracks, visibility = [], []
     for view in range(views):
         queries = np.concatenate(
@@ -277,8 +390,12 @@ def run_lapa(manifest: dict, device: torch.device) -> dict:
         visible[0] = True
         tracks.append(track)
         visibility.append(visible)
+        if trace:
+            trace.mark(f"cotracker_view_{view}_done")
     del cotracker
     torch.cuda.empty_cache()
+    if trace:
+        trace.mark("cotracker_released")
     tracks = np.stack(tracks)
     visibility = np.stack(visibility)
     for view in range(views):
@@ -291,6 +408,8 @@ def run_lapa(manifest: dict, device: torch.device) -> dict:
         )
 
     dino = DINOv2FeatureExtractor(device)
+    if trace:
+        trace.mark("dino_on_device")
     features = []
     for view in range(views):
         tokens = dino.extract_video_features(videos[view])
@@ -298,8 +417,12 @@ def run_lapa(manifest: dict, device: torch.device) -> dict:
         feature[~visibility[view]] = 0
         features.append(feature)
         del tokens
+        if trace:
+            trace.mark(f"dino_view_{view}_done")
     del dino
     torch.cuda.empty_cache()
+    if trace:
+        trace.mark("dino_released")
 
     projection = np.stack([K[view] @ w2c[view, :3] for view in range(views)])
     cotracker_world = triangulate_tracks(tracks, projection, visibility)
@@ -319,6 +442,8 @@ def run_lapa(manifest: dict, device: torch.device) -> dict:
     if loaded.missing_keys or loaded.unexpected_keys:
         raise RuntimeError("LAPA checkpoint mismatch")
     model.eval()
+    if trace:
+        trace.mark("lapa_on_device")
     center_tensor = torch.from_numpy(center).to(device)
     half_tensor = torch.from_numpy(half).to(device)
     K_device = [torch.from_numpy(value).float().to(device) for value in K]
@@ -335,6 +460,9 @@ def run_lapa(manifest: dict, device: torch.device) -> dict:
         for view in range(views)
     ]
     valid_device = [torch.from_numpy(visibility[view]).to(device) for view in range(views)]
+    if trace:
+        trace.mark("lapa_inputs_on_device")
+        trace.mark("before_lapa")
     with torch.no_grad():
         output = model(
             points_device,
@@ -345,6 +473,8 @@ def run_lapa(manifest: dict, device: torch.device) -> dict:
             (512, 384),
             view_valid=valid_device,
         )
+    if trace:
+        trace.mark("after_lapa")
     pred_world = output["points_3d"].float().cpu().numpy() * half + center
     pred_uv, depth = project_world(pred_world, manifest["K"][0], manifest["w2c"][0])
     visible = output["vis_logits"].float().cpu().numpy() > 0
@@ -376,14 +506,23 @@ def main() -> None:
     device = torch.device(args.device)
     if device.type != "cuda" or not torch.cuda.is_available():
         raise RuntimeError("These pretrained qualitative runners require CUDA")
-    if args.model == "opend4rt":
-        result = run_opend4rt(manifest, device, args.query_chunk_size)
-    elif args.model == "spatracker":
-        result = run_spatracker(manifest, device, args.support_points)
-    elif args.model == "mvtap":
-        result = run_mvtap(manifest, device)
-    else:
-        result = run_lapa(manifest, device)
+    trace = CudaMemoryTrace(device, args.memory_sample_ms) if args.memory_trace else None
+    if trace:
+        trace.start()
+    completed = False
+    try:
+        if args.model == "opend4rt":
+            result = run_opend4rt(manifest, device, args.query_chunk_size, trace)
+        elif args.model == "spatracker":
+            result = run_spatracker(manifest, device, args.support_points, trace)
+        elif args.model == "mvtap":
+            result = run_mvtap(manifest, device, trace)
+        else:
+            result = run_lapa(manifest, device, trace)
+        completed = True
+    finally:
+        if trace:
+            trace.stop_and_write(args.memory_trace, "runner_end" if completed else "runner_error")
 
     pred_uv = np.asarray(result["pred_uv"], dtype=np.float32)
     pred_visible = np.asarray(result["pred_visible"], dtype=bool)
