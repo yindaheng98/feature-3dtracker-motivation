@@ -1,6 +1,7 @@
 .codex/*
 !.codex/agents/
 !.codex/agents/*.toml
+.qoder-cn/*
 .overlay-work
 .harness-state/
 data
